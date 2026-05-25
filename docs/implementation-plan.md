@@ -1,0 +1,85 @@
+# Implementation Plan
+
+## Phase 1: Documentation and Repo Setup
+
+- Confirm architecture direction.
+- Confirm module contract.
+- Create project folder and initial docs.
+- Add `.gitignore`.
+- Decide whether this becomes its own GitHub repository.
+
+## Phase 2: Control Plane API MVP
+
+- Create .NET Azure Functions project.
+- Add health endpoint.
+- Add client tenant model.
+- Add module registry model.
+- Add job submission endpoint.
+- Add job status endpoint.
+- Add Table Storage repositories.
+- Add basic validation.
+
+## Phase 3: Local Worker Loop
+
+- Add a development worker that can process queued jobs locally.
+- Add a simple health-check module.
+- Prove the job input and output contract.
+- Store run history and job events.
+
+## Phase 4: Container Apps Job Execution
+
+- Add Terraform for Container Apps Environment.
+- Add Container Apps Job definition.
+- Add worker image build and publish steps.
+- Trigger jobs from queued messages.
+- Capture output artifacts.
+
+## Phase 5: First Useful Module
+
+Recommended first real module: Azure cost and governance report.
+
+Initial report sections:
+
+- Subscription summary.
+- Resource group summary.
+- Monthly cost trend where available.
+- Budget status.
+- Diagnostic settings coverage.
+- Defender for Cloud posture.
+- Policy assignment summary.
+- Key Vault and storage account baseline checks.
+
+This lines up well with AZ-305 because it touches governance, cost, monitoring, security, and operational design.
+
+## Phase 6: Frontend
+
+- Add client list.
+- Add module catalog.
+- Add job submission form generated from module parameter schema.
+- Add job history.
+- Add job result view.
+- Add audit view.
+
+## Phase 7: Terraform Deployment
+
+- Resource group.
+- Storage account.
+- Key Vault.
+- Function App.
+- Static Web App.
+- Service Bus.
+- Application Insights.
+- Log Analytics workspace.
+- Container Apps Environment.
+- Container registry or GitHub Container Registry integration.
+
+## Phase 8: Hardening
+
+- Add role-based access.
+- Add approval flow for high-risk modules.
+- Add dead-letter queue handling.
+- Add teardown script.
+- Add deployment guide.
+- Add sample tenant/client onboarding guide.
+- Add threat model notes.
+
