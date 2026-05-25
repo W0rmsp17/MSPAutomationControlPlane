@@ -26,6 +26,7 @@ The control plane provides:
 
 - Deployable Azure infrastructure.
 - API surface for tenants, modules, jobs, scopes, approvals, and results.
+- Module registry and management interface for adding snap-ins.
 - Standard app container registration contract.
 - Standard job input and output contract.
 - Shared operator interface.
@@ -63,6 +64,18 @@ In this model, the control plane is a set of focused functions:
 Functions wake up for a specific event, read and update shared platform state, call the required Azure service, then finish. Durable state lives in Table Storage, Blob Storage, Key Vault, and Service Bus rather than in a long-running process.
 
 The current ASP.NET Core scaffold is transitional and should be replaced with a .NET isolated Azure Functions project before implementation begins.
+
+## Deployment Direction
+
+Infrastructure will be deployed with Terraform and supported by PowerShell deployment scripts.
+
+The intended flow is:
+
+- Pre-discovery script for tenant, subscription, account, and region defaults.
+- Optional bootstrap script for privileged setup.
+- Deployment script for Terraform.
+- Post-deployment script for generated URLs and runtime settings.
+- Optional teardown script for lab environments.
 
 ## Core Concepts
 
@@ -110,3 +123,5 @@ The health check module should come first because it proves the control plane ca
 ## Repository Status
 
 This repository is currently documentation-first. Implementation should start after the architecture and module contract are agreed.
+
+The first implementation step is replacing the transitional ASP.NET Core scaffold with a .NET isolated Azure Functions project.

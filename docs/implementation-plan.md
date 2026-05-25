@@ -16,6 +16,9 @@
 - Add client tenant model.
 - Add module registry model.
 - Add supported target scope model.
+- Add module manifest validation.
+- Add module registration endpoint.
+- Add module catalog endpoint.
 - Add job submission endpoint.
 - Add job status endpoint.
 - Add Table Storage repositories.
@@ -66,6 +69,9 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 
 ## Phase 7: Terraform Deployment
 
+- Add pre-discovery script.
+- Add optional bootstrap script.
+- Add deployment script.
 - Resource group.
 - Storage account.
 - Key Vault.
@@ -77,6 +83,8 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 - Container Apps Environment.
 - Container registry or GitHub Container Registry integration.
 - Configurable region, naming prefix, environment, and module source inputs.
+- Add post-deployment script.
+- Add optional teardown script.
 
 ## Phase 8: Hardening
 

@@ -24,6 +24,7 @@ The frontend gives operators a simple way to:
 
 - View registered client tenants.
 - Browse enabled automation modules.
+- Register new snap-in modules through a management interface.
 - Choose a supported target scope, such as tenant, users, groups, devices, subscriptions, or resource groups.
 - Submit module jobs.
 - Review job status and output.
@@ -38,6 +39,7 @@ Azure Functions isolated .NET should host the control API and controller logic. 
 - Authentication and authorization.
 - Client tenant registration.
 - Module registration and discovery.
+- Module manifest validation.
 - Job submission.
 - Parameter validation.
 - Target scope validation.
@@ -98,6 +100,8 @@ Container Apps Jobs
 ```
 
 This keeps the controller cheap at idle, event-driven, and aligned with the serverless design. If the platform later needs richer middleware or always-on APIs, the contract should still allow the API layer to move to Container Apps without changing snap-in modules.
+
+Runtime health checks should be click-to-refresh for the MVP. Background polling can be added later if required.
 
 ### Queue
 
@@ -171,6 +175,8 @@ The control plane should not need custom code for every module. A module is snap
 - A declared output schema.
 
 The module receives a standard job input and returns a standard output. This keeps the control plane reusable.
+
+Modules should be registered through the control plane management API/UI. The MVP should support manual manifest registration first, with registry or repository discovery later.
 
 ## Deployment Package
 

@@ -1,0 +1,115 @@
+# Module Management
+
+The management interface is the entry point for adding snap-in automation modules to the control plane.
+
+This turns modules into registered products inside the platform. Operators should be able to add, validate, enable, run, and review modules without redeploying the control plane.
+
+## MVP Approach
+
+The MVP should start with API-based module registration before building the full UI.
+
+Initial API flow:
+
+```text
+POST /api/modules
+  -> Validate module manifest
+  -> Check module ID and version uniqueness
+  -> Store registered module
+  -> Return module registration result
+
+GET /api/modules
+  -> Return registered module catalog
+
+GET /api/modules/{moduleId}
+  -> Return module details, supported scopes, required permissions, and latest run summary
+```
+
+The UI can later call the same APIs.
+
+## Future Management UI
+
+The management interface should eventually provide:
+
+- Registered modules.
+- Add module.
+- Validate manifest.
+- Enable or disable module per tenant.
+- View required permissions.
+- View supported target scopes.
+- View run history.
+- View current module health.
+- View latest version and image reference.
+
+Suggested navigation:
+
+```text
+Dashboard
+Tenants
+Modules
+Jobs
+Approvals
+Runtime Health
+Settings
+```
+
+## Module Registration Inputs
+
+Manual registration should accept a module manifest first. Later versions can support manifest URLs or GitHub/container registry discovery.
+
+Initial inputs:
+
+- Module manifest JSON.
+- Optional display override.
+- Enabled tenants.
+- Approval policy override.
+
+The manifest provides:
+
+- Module ID.
+- Module name.
+- Version.
+- Container image URI.
+- Runtime type.
+- Supported target scopes.
+- Parameter schema.
+- Required permissions.
+- Output schema.
+- Optional documentation URL.
+
+## Validation Rules
+
+The control plane should reject unsafe or invalid module registrations.
+
+Initial checks:
+
+- Manifest schema is valid.
+- Module ID is present.
+- Version is present.
+- Module ID and version combination is unique.
+- Runtime type is supported.
+- Container image URI is present.
+- Container registry is allowed by platform configuration.
+- Supported scopes are valid.
+- Parameter schema is valid JSON schema.
+- Required permissions are declared.
+- Approval policy is valid.
+
+## Security Notes
+
+The control plane should not blindly execute any submitted image.
+
+MVP safety controls:
+
+- Only allow configured container registries.
+- Require explicit tenant enablement.
+- Require declared permissions.
+- Require approval for high-risk modules.
+- Store every module registration and update as an audit event.
+
+Later controls:
+
+- Image signing or trusted publisher metadata.
+- Vulnerability scan status.
+- Per-module RBAC.
+- Version pinning and rollback.
+
