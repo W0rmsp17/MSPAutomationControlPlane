@@ -17,4 +17,9 @@ public sealed class InMemoryJobQueue : IJobQueue
     {
         return _messages.ToArray();
     }
+
+    public bool TryDequeue(out JobDispatchMessage? message)
+    {
+        return _messages.TryDequeue(out message);
+    }
 }

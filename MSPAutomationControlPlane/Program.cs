@@ -34,6 +34,7 @@ var host = new HostBuilder()
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
         services.AddSingleton<JobService>();
+        services.AddSingleton<LocalJobDispatcher>();
     })
     .Build();
 

@@ -7,4 +7,6 @@ public interface IJobRepository
     Task AddAsync(JobRecord job, CancellationToken cancellationToken);
 
     Task<JobRecord?> GetAsync(string id, CancellationToken cancellationToken);
+
+    Task UpdateAsync(JobRecord job, CancellationToken cancellationToken);
 }

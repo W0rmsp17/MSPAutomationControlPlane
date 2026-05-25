@@ -18,4 +18,10 @@ public sealed class InMemoryJobRepository : IJobRepository
         _jobs.TryGetValue(id, out var job);
         return Task.FromResult(job);
     }
+
+    public Task UpdateAsync(JobRecord job, CancellationToken cancellationToken)
+    {
+        _jobs[job.Id] = job;
+        return Task.CompletedTask;
+    }
 }

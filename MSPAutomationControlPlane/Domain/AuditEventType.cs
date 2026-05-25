@@ -6,5 +6,6 @@ public enum AuditEventType
     ClientConnectionRegistered,
     NotificationSubscriptionRegistered,
     NotificationSubscriptionDeleted,
-    JobSubmitted
+    JobSubmitted,
+    JobCompleted
 }
