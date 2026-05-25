@@ -81,6 +81,8 @@ The intended flow is:
 - Post-deployment script for generated URLs and runtime settings.
 - Optional teardown script for lab environments.
 
+The first Terraform deployment target is the central MSP environment. Client tenants are registered later as `ClientConnection` records rather than receiving their own management plane deployment.
+
 ## Core Concepts
 
 Client tenant:

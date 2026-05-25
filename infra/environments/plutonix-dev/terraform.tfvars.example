@@ -1,0 +1,10 @@
+subscription_id  = "00000000-0000-0000-0000-000000000000"
+msp_tenant_id    = "00000000-0000-0000-0000-000000000000"
+name_prefix      = "plxcp"
+environment_name = "dev"
+location         = "australiaeast"
+
+tags = {
+  project = "msp-automation-control-plane"
+  owner   = "plutonix"
+}

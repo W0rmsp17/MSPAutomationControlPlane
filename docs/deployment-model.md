@@ -4,6 +4,8 @@ This project should be deployable through Terraform with supporting scripts for 
 
 The deployment should be reusable by other implementors and should not contain tenant-specific hard-coding.
 
+The MVP deployment creates the central MSP-hosted control plane only. Client tenants are added after deployment through client connection registration.
+
 ## Deployment Goals
 
 - Portable across regions.
@@ -92,4 +94,3 @@ Post-deployment should read Terraform outputs and update runtime settings such a
 - Allowed module registry configuration.
 
 Post-deployment should also print a concise deployment summary for the implementor.
-
