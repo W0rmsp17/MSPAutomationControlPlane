@@ -11,7 +11,9 @@ var host = new HostBuilder()
         services.AddSingleton<IJobRepository, InMemoryJobRepository>();
         services.AddSingleton<IClientConnectionRepository, InMemoryClientConnectionRepository>();
         services.AddSingleton<INotificationSubscriptionRepository, InMemoryNotificationSubscriptionRepository>();
+        services.AddSingleton<IAuditEventRepository, InMemoryAuditEventRepository>();
         services.AddSingleton<IOperatorContext, StubOperatorContext>();
+        services.AddSingleton<AuditService>();
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();

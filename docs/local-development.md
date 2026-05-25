@@ -25,6 +25,7 @@ The current local endpoints are:
 
 ```text
 GET  /api/health
+GET  /api/audit-events
 POST /api/client-connections
 GET  /api/client-connections
 POST /api/modules
@@ -82,6 +83,12 @@ Read job status:
 
 ```powershell
 Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}' -Method Get
+```
+
+List audit events:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:7071/api/audit-events' -Method Get
 ```
 
 ## Current MVP Limits

@@ -5,6 +5,7 @@ namespace MSPAutomationControlPlane.Services;
 
 public sealed class ModuleRegistryService(
     IModuleRepository moduleRepository,
+    AuditService auditService,
     IOperatorContext operatorContext)
 {
     private static readonly HashSet<string> SupportedRuntimes = new(StringComparer.OrdinalIgnoreCase)
@@ -37,6 +38,14 @@ public sealed class ModuleRegistryService(
         };
 
         await moduleRepository.AddAsync(registration, cancellationToken);
+        await auditService.WriteAsync(
+            AuditEventType.ModuleRegistered,
+            operatorContext.CurrentOperator,
+            $"Module '{manifest.Id}' version '{manifest.Version}' was registered.",
+            cancellationToken,
+            moduleId: manifest.Id,
+            resourceId: $"{manifest.Id}:{manifest.Version}");
+
         return Result<ModuleRegistration>.Success(registration);
     }
 

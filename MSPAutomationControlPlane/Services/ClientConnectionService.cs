@@ -5,6 +5,7 @@ namespace MSPAutomationControlPlane.Services;
 
 public sealed class ClientConnectionService(
     IClientConnectionRepository clientConnectionRepository,
+    AuditService auditService,
     IOperatorContext operatorContext)
 {
     public async Task<Result<ClientConnection>> RegisterAsync(
@@ -30,6 +31,14 @@ public sealed class ClientConnectionService(
         };
 
         await clientConnectionRepository.AddAsync(clientConnection, cancellationToken);
+        await auditService.WriteAsync(
+            AuditEventType.ClientConnectionRegistered,
+            operatorContext.CurrentOperator,
+            $"Client connection '{clientConnection.Id}' was registered.",
+            cancellationToken,
+            clientConnectionId: clientConnection.Id,
+            resourceId: clientConnection.Id);
+
         return Result<ClientConnection>.Success(clientConnection);
     }
 

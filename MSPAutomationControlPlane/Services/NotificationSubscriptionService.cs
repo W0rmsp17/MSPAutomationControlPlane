@@ -5,6 +5,7 @@ namespace MSPAutomationControlPlane.Services;
 
 public sealed class NotificationSubscriptionService(
     INotificationSubscriptionRepository notificationSubscriptionRepository,
+    AuditService auditService,
     IOperatorContext operatorContext)
 {
     public async Task<Result<NotificationSubscription>> RegisterAsync(
@@ -28,6 +29,13 @@ public sealed class NotificationSubscriptionService(
         };
 
         await notificationSubscriptionRepository.AddAsync(subscription, cancellationToken);
+        await auditService.WriteAsync(
+            AuditEventType.NotificationSubscriptionRegistered,
+            operatorContext.CurrentOperator,
+            $"Notification subscription '{subscription.Name}' was registered.",
+            cancellationToken,
+            resourceId: subscription.Id);
+
         return Result<NotificationSubscription>.Success(subscription);
     }
 
@@ -36,9 +44,20 @@ public sealed class NotificationSubscriptionService(
         return notificationSubscriptionRepository.ListAsync(cancellationToken);
     }
 
-    public Task<bool> DeleteAsync(string id, CancellationToken cancellationToken)
+    public async Task<bool> DeleteAsync(string id, CancellationToken cancellationToken)
     {
-        return notificationSubscriptionRepository.DeleteAsync(id, cancellationToken);
+        var removed = await notificationSubscriptionRepository.DeleteAsync(id, cancellationToken);
+        if (removed)
+        {
+            await auditService.WriteAsync(
+                AuditEventType.NotificationSubscriptionDeleted,
+                operatorContext.CurrentOperator,
+                $"Notification subscription '{id}' was deleted.",
+                cancellationToken,
+                resourceId: id);
+        }
+
+        return removed;
     }
 
     private static string? Validate(NotificationSubscription subscription)

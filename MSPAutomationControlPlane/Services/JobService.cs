@@ -7,6 +7,7 @@ public sealed class JobService(
     IJobRepository jobRepository,
     IModuleRepository moduleRepository,
     IClientConnectionRepository clientConnectionRepository,
+    AuditService auditService,
     IOperatorContext operatorContext)
 {
     public async Task<Result<JobRecord>> SubmitAsync(
@@ -83,6 +84,16 @@ public sealed class JobService(
         job.Events.Add(new JobEvent("DispatchSkippedForMvp", now, "Service Bus and Container Apps dispatch are not wired yet.", "control-plane"));
 
         await jobRepository.AddAsync(job, cancellationToken);
+        await auditService.WriteAsync(
+            AuditEventType.JobSubmitted,
+            operatorContext.CurrentOperator,
+            $"Job '{job.Id}' was submitted for module '{job.ModuleId}' against client connection '{clientConnection.Id}'.",
+            cancellationToken,
+            clientConnectionId: clientConnection.Id,
+            moduleId: job.ModuleId,
+            jobId: job.Id,
+            resourceId: job.Id);
+
         return Result<JobRecord>.Success(job);
     }
 
