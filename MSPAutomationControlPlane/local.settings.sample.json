@@ -8,6 +8,8 @@
     "ControlPlane__TablePrefix": "MspControl",
     "ControlPlane__QueueProvider": "InMemory",
     "ControlPlane__ServiceBusConnectionString": "",
-    "ControlPlane__JobQueueName": "jobs"
+    "ControlPlane__JobQueueName": "jobs",
+    "ServiceBusConnection": "",
+    "ServiceBusJobQueueName": "jobs"
   }
 }

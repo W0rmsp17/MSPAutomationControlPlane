@@ -45,8 +45,12 @@ Deployed environments can use Service Bus by setting:
 ```json
 "ControlPlane__QueueProvider": "ServiceBus",
 "ControlPlane__ServiceBusConnectionString": "<service-bus-connection-string>",
-"ControlPlane__JobQueueName": "jobs"
+"ControlPlane__JobQueueName": "jobs",
+"ServiceBusConnection": "<service-bus-connection-string>",
+"ServiceBusJobQueueName": "jobs"
 ```
+
+The simple `ServiceBusConnection` and `ServiceBusJobQueueName` settings are used by the Functions trigger binding. The `ControlPlane__...` settings are used by the application queue provider.
 
 The current local endpoints are:
 
@@ -138,6 +142,7 @@ Invoke-RestMethod -Uri 'http://localhost:7071/api/local/dispatch-next' -Method P
 - Operator identity is stubbed as `operator@local.dev`.
 - Job dispatch is queued into an in-memory queue.
 - Local dispatch simulates worker execution and marks the job as `Succeeded`.
+- Service Bus dispatch uses the same `JobDispatcher` service when `ControlPlane__QueueProvider` is set to `ServiceBus`.
 - Service Bus is not wired yet.
 - Container Apps Jobs are not wired yet.
 - Key Vault is not wired yet.

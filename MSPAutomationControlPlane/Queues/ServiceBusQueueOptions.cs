@@ -8,7 +8,9 @@ public sealed class ServiceBusQueueOptions
 
     public static ServiceBusQueueOptions FromEnvironment()
     {
-        var connectionString = Environment.GetEnvironmentVariable("ControlPlane__ServiceBusConnectionString");
+        var connectionString =
+            Environment.GetEnvironmentVariable("ControlPlane__ServiceBusConnectionString") ??
+            Environment.GetEnvironmentVariable("ServiceBusConnection");
         if (string.IsNullOrWhiteSpace(connectionString))
         {
             throw new InvalidOperationException(
@@ -18,7 +20,10 @@ public sealed class ServiceBusQueueOptions
         return new ServiceBusQueueOptions
         {
             ConnectionString = connectionString,
-            JobQueueName = Environment.GetEnvironmentVariable("ControlPlane__JobQueueName") ?? "jobs"
+            JobQueueName =
+                Environment.GetEnvironmentVariable("ControlPlane__JobQueueName") ??
+                Environment.GetEnvironmentVariable("ServiceBusJobQueueName") ??
+                "jobs"
         };
     }
 }
