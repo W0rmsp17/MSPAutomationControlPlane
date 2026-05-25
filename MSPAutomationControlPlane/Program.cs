@@ -7,11 +7,25 @@ var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
     .ConfigureServices(services =>
     {
-        services.AddSingleton<IModuleRepository, InMemoryModuleRepository>();
-        services.AddSingleton<IJobRepository, InMemoryJobRepository>();
-        services.AddSingleton<IClientConnectionRepository, InMemoryClientConnectionRepository>();
-        services.AddSingleton<INotificationSubscriptionRepository, InMemoryNotificationSubscriptionRepository>();
-        services.AddSingleton<IAuditEventRepository, InMemoryAuditEventRepository>();
+        var repositoryProvider = Environment.GetEnvironmentVariable("ControlPlane__RepositoryProvider");
+        if (string.Equals(repositoryProvider, "TableStorage", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton(TableStorageOptions.FromEnvironment());
+            services.AddSingleton<IModuleRepository, TableStorageModuleRepository>();
+            services.AddSingleton<IJobRepository, TableStorageJobRepository>();
+            services.AddSingleton<IClientConnectionRepository, TableStorageClientConnectionRepository>();
+            services.AddSingleton<INotificationSubscriptionRepository, TableStorageNotificationSubscriptionRepository>();
+            services.AddSingleton<IAuditEventRepository, TableStorageAuditEventRepository>();
+        }
+        else
+        {
+            services.AddSingleton<IModuleRepository, InMemoryModuleRepository>();
+            services.AddSingleton<IJobRepository, InMemoryJobRepository>();
+            services.AddSingleton<IClientConnectionRepository, InMemoryClientConnectionRepository>();
+            services.AddSingleton<INotificationSubscriptionRepository, InMemoryNotificationSubscriptionRepository>();
+            services.AddSingleton<IAuditEventRepository, InMemoryAuditEventRepository>();
+        }
+
         services.AddSingleton<IOperatorContext, StubOperatorContext>();
         services.AddSingleton<AuditService>();
         services.AddSingleton<ClientConnectionService>();

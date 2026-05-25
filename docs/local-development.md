@@ -21,6 +21,19 @@ func start --port 7071
 
 The sample local settings use `UseDevelopmentStorage=true`. If Azurite is not running, the Functions host may report the storage health check as unhealthy. The current in-memory MVP endpoints still run, but Azurite should be started once storage-triggered functions or local Azure Storage testing are added.
 
+Local development defaults to in-memory repositories:
+
+```json
+"ControlPlane__RepositoryProvider": "InMemory"
+```
+
+To test Azure Table Storage adapters locally, start Azurite and set:
+
+```json
+"ControlPlane__RepositoryProvider": "TableStorage",
+"ControlPlane__StorageConnectionString": "UseDevelopmentStorage=true"
+```
+
 The current local endpoints are:
 
 ```text

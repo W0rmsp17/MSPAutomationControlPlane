@@ -2,6 +2,9 @@
   "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated"
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "ControlPlane__RepositoryProvider": "InMemory",
+    "ControlPlane__StorageConnectionString": "UseDevelopmentStorage=true",
+    "ControlPlane__TablePrefix": "MspControl"
   }
 }
