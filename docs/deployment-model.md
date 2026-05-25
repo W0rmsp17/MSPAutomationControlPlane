@@ -43,7 +43,7 @@ post-deploy.ps1
   -> Read Terraform outputs and print endpoint/runtime values.
 
 teardown.ps1
-  -> Optional cleanup for lab environments.
+  -> Preview or run cleanup for lab environments, including Terraform resources and the script-managed Entra auth app registration.
 ```
 
 ## Terraform Responsibilities
@@ -121,3 +121,19 @@ Post-deployment should read Terraform outputs and update runtime settings such a
 Post-deployment should also print a concise deployment summary for the implementor.
 
 The deployment script supports non-interactive lab deployment through `-Apply -AutoApprove`. Production deployments can omit `-AutoApprove` to keep the Terraform approval prompt.
+
+## Teardown Notes
+
+The teardown script is intentionally dry-run by default. It runs a Terraform destroy plan and reports the script-managed Static Web App/API auth app registration that would be deleted.
+
+```powershell
+.\scripts\teardown.ps1 -Environment cholbing-dev
+```
+
+To remove the lab deployment:
+
+```powershell
+.\scripts\teardown.ps1 -Environment cholbing-dev -Destroy -AutoApprove
+```
+
+The Entra app registration is not Terraform-managed because it is configured after the Static Web App hostname exists. `teardown.ps1` deletes it by exact client ID when `-AuthAppClientId` is supplied, otherwise by the default display name. If the app registration is shared or manually owned, pass `-KeepAuthApp`.

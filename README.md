@@ -96,6 +96,20 @@ Create an environment-specific `terraform.tfvars` file from the relevant example
 .\scripts\post-deploy.ps1
 ```
 
+For lab cleanup, preview teardown first:
+
+```powershell
+.\scripts\teardown.ps1 -Environment cholbing-dev
+```
+
+Then destroy the Terraform-managed resources and the script-managed Static Web App/API auth app registration:
+
+```powershell
+.\scripts\teardown.ps1 -Environment cholbing-dev -Destroy -AutoApprove
+```
+
+Use `-KeepAuthApp` if the Entra app registration is shared or manually managed outside this lab deployment.
+
 If Container Apps is used for worker execution, the Azure subscription must have the `Microsoft.App` resource provider registered:
 
 ```powershell
