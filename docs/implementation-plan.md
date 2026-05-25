@@ -31,6 +31,9 @@
 
 ## Phase 3: Local Worker Loop
 
+- Add `modules/tenant-health-check` sample module structure.
+- Add module manifest, Dockerfile, and tests.
+- Add GitHub Actions workflow for module validation/build.
 - Add a development worker that can process queued jobs locally.
 - Add a simple health-check module.
 - Prove the job input and output contract.
@@ -41,7 +44,7 @@
 
 - Add Terraform for Container Apps Environment.
 - Add Container Apps Job definition.
-- Add worker image build and publish steps.
+- Add worker image build and publish steps through CI/CD.
 - Add Service Bus-triggered Function to dispatch queued jobs.
 - Capture output artifacts.
 

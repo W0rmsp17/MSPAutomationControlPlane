@@ -54,7 +54,7 @@ Settings
 
 ## Module Registration Inputs
 
-Manual registration should accept a module manifest first. Later versions can support manifest URLs or GitHub/container registry discovery.
+Manual registration should accept a module manifest first. CI/CD-produced modules should still register through the same manifest validation path. Later versions can support manifest URLs or GitHub/container registry discovery, but the control plane should not clone and execute arbitrary source code.
 
 Initial inputs:
 
@@ -75,6 +75,17 @@ The manifest provides:
 - Required permissions.
 - Output schema.
 - Optional documentation URL.
+
+## Intake Paths
+
+Supported intake paths:
+
+- Manual JSON manifest registration for labs, demos, and early module development.
+- CI/CD-produced artifacts where GitHub Actions or another pipeline tests module code, builds a container image, and publishes a manifest referencing that image.
+
+Both paths converge on `POST /api/modules`. The control plane validates the manifest, stores the registration, and later schedules the referenced image. It does not build or execute raw Git source.
+
+See [Module CI/CD Model](./module-ci-cd.md) for the full pipeline model.
 
 ## Validation Rules
 

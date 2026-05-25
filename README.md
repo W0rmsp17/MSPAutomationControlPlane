@@ -181,5 +181,6 @@ This repository now has a deployable MVP foundation:
 - Microsoft Entra protected management UI and Function API bearer-token validation.
 - PowerShell scripts for pre-discovery, Terraform deployment, Function App zip deployment, Static Web App deployment, and post-deployment outputs.
 - Client connection bootstrap helper for target tenant app registration metadata.
+- Dual module intake model: manual manifest registration and CI/CD-produced module artifacts.
 
 The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.
