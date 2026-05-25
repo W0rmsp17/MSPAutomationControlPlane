@@ -158,5 +158,6 @@ This repository now has a deployable MVP foundation:
 - Terraform deployment for the central MSP control plane.
 - Static management UI hosted on Azure Static Web Apps.
 - PowerShell scripts for pre-discovery, Terraform deployment, Function App zip deployment, Static Web App deployment, and post-deployment outputs.
+- Client connection bootstrap helper for target tenant app registration metadata.
 
 The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.

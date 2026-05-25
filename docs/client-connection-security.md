@@ -30,9 +30,11 @@ Initial properties:
 - Execution mode.
 - App registration client ID.
 - Certificate Key Vault reference.
+- Service principal object ID in the target tenant.
 - Enabled modules.
 - Allowed target scopes.
-- Required permission readiness state.
+- Required permission readiness state: `Draft`, `PendingConsent`, `Ready`, or `Blocked`.
+- Configured permissions with provider, permission name, type, and admin consent state.
 - Approval policy.
 - Created/updated audit metadata.
 
@@ -130,3 +132,47 @@ Before a module can run for a client, the control plane should compare:
 
 The management interface should show whether a module is ready for a client before an operator submits a job.
 
+## Bootstrap Output
+
+Target tenant bootstrap should produce a non-secret connection record that can be registered with the MSP control plane:
+
+- Client connection ID.
+- Display name.
+- Target tenant ID.
+- Execution app client ID.
+- Target service principal object ID.
+- Certificate Key Vault reference in the MSP tenant.
+- Configured permissions.
+- Readiness status.
+- Notes describing any manual consent still required.
+
+The bootstrap process may create the app registration automatically when run by a sufficiently privileged target tenant administrator, or it may accept manually created values from organisations that prefer pre-provisioned identities.
+
+## Bootstrap Helper
+
+The repository includes `scripts/new-client-connection-bootstrap.ps1` to generate the JSON record used by the control plane.
+
+Manual/pre-created app registration mode:
+
+```powershell
+.\scripts\new-client-connection-bootstrap.ps1 `
+  -ClientConnectionId "client-plutonix" `
+  -DisplayName "Plutonix" `
+  -TenantId "<target-tenant-id>" `
+  -OutputPath ".\samples\client-connection-plutonix.json"
+```
+
+Automated target app registration mode:
+
+```powershell
+az login --tenant <target-tenant-id>
+
+.\scripts\new-client-connection-bootstrap.ps1 `
+  -ClientConnectionId "client-plutonix" `
+  -DisplayName "Plutonix" `
+  -TenantId "<target-tenant-id>" `
+  -CreateAppRegistration `
+  -OutputPath ".\samples\client-connection-plutonix.json"
+```
+
+The automated path creates the target tenant application and service principal metadata only. Certificate credential creation, Key Vault import, and admin consent remain explicit follow-up steps until the production bootstrap pack is expanded.

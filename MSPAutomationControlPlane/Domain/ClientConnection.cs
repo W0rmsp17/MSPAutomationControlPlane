@@ -14,6 +14,16 @@ public sealed record ClientConnection
 
     public string? CertificateReference { get; init; }
 
+    public string? ServicePrincipalObjectId { get; init; }
+
+    public ClientConnectionReadinessStatus ReadinessStatus { get; init; } = ClientConnectionReadinessStatus.Draft;
+
+    public IReadOnlyList<ConfiguredPermission> ConfiguredPermissions { get; init; } = [];
+
+    public DateTimeOffset? LastReadinessCheckAt { get; init; }
+
+    public string? ReadinessNotes { get; init; }
+
     public IReadOnlyList<string> EnabledModuleIds { get; init; } = [];
 
     public IReadOnlyList<TargetScopeType> AllowedScopes { get; init; } = [TargetScopeType.Tenant];

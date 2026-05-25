@@ -5,6 +5,18 @@
   "executionMode": "Central",
   "executionAppClientId": "22222222-2222-2222-2222-222222222222",
   "certificateReference": "kv://clients/client-contoso/graph-certificate",
+  "servicePrincipalObjectId": "33333333-3333-3333-3333-333333333333",
+  "readinessStatus": "Ready",
+  "configuredPermissions": [
+    {
+      "provider": "MicrosoftGraph",
+      "permission": "Organization.Read.All",
+      "type": "Application",
+      "adminConsented": true
+    }
+  ],
+  "lastReadinessCheckAt": "2026-05-26T00:00:00Z",
+  "readinessNotes": "Sample connection metadata for local and API smoke testing.",
   "enabledModuleIds": [
     "tenant-health-check"
   ],

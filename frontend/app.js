@@ -16,6 +16,17 @@ const samples = {
     executionMode: "Central",
     executionAppClientId: "00000000-0000-0000-0000-000000000000",
     certificateReference: "kv://clients/client-plutonix/graph-certificate",
+    servicePrincipalObjectId: "00000000-0000-0000-0000-000000000000",
+    readinessStatus: "PendingConsent",
+    configuredPermissions: [
+      {
+        provider: "MicrosoftGraph",
+        permission: "Organization.Read.All",
+        type: "Application",
+        adminConsented: false
+      }
+    ],
+    readinessNotes: "Replace placeholder IDs after target tenant bootstrap.",
     enabledModuleIds: ["tenant-health-check"],
     allowedScopes: ["Tenant", "Users"],
     enabled: true
@@ -204,7 +215,10 @@ function render() {
   el("metric-audit").textContent = state.auditEvents.length;
 
   renderList("clients-list", state.clients, (client) =>
-    listItem(client.displayName || client.id, `${client.tenantId || ""} - ${client.executionMode || ""}`, client.enabled ? "Enabled" : "Disabled"));
+    listItem(
+      client.displayName || client.id,
+      `${client.tenantId || ""} - ${client.executionMode || ""} - ${client.readinessStatus || "Unknown"}`,
+      client.enabled ? "Enabled" : "Disabled"));
 
   renderList("modules-list", state.modules, (module) => {
     const manifest = module.manifest || module;

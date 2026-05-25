@@ -74,6 +74,24 @@ public sealed class ClientConnectionService(
             return "At least one allowed target scope is required.";
         }
 
+        if (clientConnection.ReadinessStatus == ClientConnectionReadinessStatus.Ready)
+        {
+            if (string.IsNullOrWhiteSpace(clientConnection.ExecutionAppClientId))
+            {
+                return "Execution app client id is required when readiness is Ready.";
+            }
+
+            if (string.IsNullOrWhiteSpace(clientConnection.CertificateReference))
+            {
+                return "Certificate reference is required when readiness is Ready.";
+            }
+
+            if (clientConnection.ConfiguredPermissions.Count == 0)
+            {
+                return "Configured permissions are required when readiness is Ready.";
+            }
+        }
+
         return null;
     }
 }
