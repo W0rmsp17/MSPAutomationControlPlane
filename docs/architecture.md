@@ -18,6 +18,26 @@ Admin UI
 
 ## Main Components
 
+### Hosting Model
+
+The primary hosting model is a central MSP-hosted control plane.
+
+```text
+MSP tenant/subscription
+  -> Management UI
+  -> Functions control API
+  -> Module registry
+  -> Job queue
+  -> Runtime workers
+  -> Audit and artifacts
+
+Client tenants
+  -> Connected through explicit client connection records
+  -> Accessed through approved app registrations, certificates, or future execution agents
+```
+
+This gives the MSP one management plane for all clients while keeping execution identity and target scope explicit per client.
+
 ### Frontend
 
 The frontend gives operators a simple way to:
@@ -192,6 +212,8 @@ This project should be deployable as a reusable package. Implementors should be 
 - Whether sample modules are deployed.
 
 The deployment should not contain tenant-specific hard-coding. Demo modules may exist, but real automation modules should be optional snap-ins.
+
+Optional deployment tiers can add API Management for API governance or Application Gateway/WAF for enterprise ingress requirements.
 
 ## Security Model
 

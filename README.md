@@ -34,6 +34,8 @@ The control plane provides:
 
 The control plane does not provide every automation. Instead, it provides the platform that makes automations easy to snap in.
 
+The primary deployment model is a central MSP-hosted control plane. Managed client tenants are connected through explicit client connection records that define the tenant ID, execution identity, enabled modules, allowed scopes, and permission readiness.
+
 ## Initial Direction
 
 The control plane should be serverless-first, but not force every automation to run inside Azure Functions. Functions are a good fit for APIs, orchestration, validation, and short tasks. Container-based workers are a better fit for snap-ins because modules may need different SDKs, PowerShell modules, CLIs, or runtime versions.
@@ -49,6 +51,8 @@ Recommended MVP architecture:
 - Identity: Managed identities for Azure resources, with per-client Microsoft Entra app registrations or federated identity where needed.
 - Observability: Application Insights and Log Analytics.
 - Infrastructure: Terraform.
+
+Optional enterprise edge components such as API Management and Application Gateway should be deployment tiers, not MVP requirements.
 
 ## Runtime Decision
 

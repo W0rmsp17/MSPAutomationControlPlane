@@ -13,6 +13,7 @@
 
 - Replace the transitional ASP.NET Core scaffold with a .NET isolated Azure Functions project.
 - Add health endpoint.
+- Add client connection model.
 - Add client tenant model.
 - Add module registry model.
 - Add supported target scope model.
@@ -88,6 +89,8 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 
 ## Phase 8: Hardening
 
+- Add APIM optional deployment tier.
+- Add Application Gateway/WAF optional deployment tier.
 - Add role-based access.
 - Add approval flow for high-risk modules.
 - Add dead-letter queue handling.
