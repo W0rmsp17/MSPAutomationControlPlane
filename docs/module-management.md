@@ -83,16 +83,20 @@ The control plane should reject unsafe or invalid module registrations.
 Initial checks:
 
 - Manifest schema is valid.
-- Module ID is present.
-- Version is present.
+- Module ID is present and uses lowercase letters, numbers, dots, and hyphens.
+- Version is present and uses semantic version format, such as `1.0.0`.
 - Module ID and version combination is unique.
 - Runtime type is supported.
-- Container image URI is present.
-- Container registry is allowed by platform configuration.
+- Container image URI is present and includes a registry hostname.
+- Container registry is allowed by platform configuration. The default allow-list is `ghcr.io,mcr.microsoft.com`.
 - Supported scopes are valid.
-- Parameter schema is valid JSON schema.
-- Required permissions are declared.
+- `parametersSchema` and `outputsSchema` are JSON objects.
+- `requiredPermissions` declares at least one permission.
+- Required permission entries include provider, permission, and type.
+- Required permission type is `Application` or `Delegated`.
 - Approval policy is valid.
+
+Validation failures return a `400` response with an `errors` array so operators can correct all obvious manifest issues in one pass.
 
 ## Security Notes
 
@@ -112,4 +116,3 @@ Later controls:
 - Vulnerability scan status.
 - Per-module RBAC.
 - Version pinning and rollback.
-

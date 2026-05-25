@@ -44,4 +44,17 @@ public static class HttpRequestDataExtensions
             error = detail ?? "The request could not be processed."
         });
     }
+
+    public static Task<HttpResponseData> WriteProblemAsync(
+        this HttpRequestData request,
+        HttpStatusCode statusCode,
+        string? detail,
+        IReadOnlyList<string> errors)
+    {
+        return request.WriteJsonAsync(statusCode, new
+        {
+            error = detail ?? "The request could not be processed.",
+            errors
+        });
+    }
 }

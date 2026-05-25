@@ -68,6 +68,12 @@ variable "table_prefix" {
   default     = "MspControl"
 }
 
+variable "allowed_module_registries" {
+  description = "Container registry hostnames allowed for module manifest image references."
+  type        = list(string)
+  default     = ["ghcr.io", "mcr.microsoft.com"]
+}
+
 variable "log_retention_days" {
   description = "Log Analytics retention in days."
   type        = number

@@ -14,6 +14,8 @@ var host = new HostBuilder()
     {
         services.AddSingleton(ControlPlaneAuthOptions.FromEnvironment());
         services.AddSingleton<EntraTokenValidator>();
+        services.AddSingleton(ModuleRegistryOptions.FromEnvironment());
+        services.AddSingleton<ModuleManifestValidator>();
 
         var repositoryProvider = Environment.GetEnvironmentVariable("ControlPlane__RepositoryProvider");
         if (string.Equals(repositoryProvider, "TableStorage", StringComparison.OrdinalIgnoreCase))

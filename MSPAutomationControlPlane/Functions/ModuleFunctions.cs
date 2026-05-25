@@ -23,7 +23,10 @@ public sealed class ModuleFunctions(ModuleRegistryService moduleRegistryService)
         var result = await moduleRegistryService.RegisterAsync(manifest, cancellationToken);
         if (!result.Succeeded)
         {
-            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, result.Error);
+            return await request.WriteProblemAsync(
+                HttpStatusCode.BadRequest,
+                "Module manifest validation failed.",
+                result.Errors);
         }
 
         return await request.WriteJsonAsync(HttpStatusCode.Created, result.Value!);

@@ -173,6 +173,7 @@ resource "azurerm_windows_function_app" "control_api" {
     ControlPlane__RepositoryProvider         = "TableStorage"
     ControlPlane__StorageConnectionString    = azurerm_storage_account.main.primary_connection_string
     ControlPlane__TablePrefix                = var.table_prefix
+    ControlPlane__Modules__AllowedRegistries = join(",", var.allowed_module_registries)
     ControlPlane__QueueProvider              = "ServiceBus"
     ControlPlane__ServiceBusConnectionString = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
     ControlPlane__JobQueueName               = azurerm_servicebus_queue.jobs.name

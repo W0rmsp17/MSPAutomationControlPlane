@@ -15,6 +15,7 @@
     "ControlPlane__Auth__RequiredScope": "access_as_user",
     "ControlPlane__Auth__AllowedUserObjectIds": "",
     "ControlPlane__Auth__AllowedGroupIds": "",
+    "ControlPlane__Modules__AllowedRegistries": "ghcr.io,mcr.microsoft.com",
     "ServiceBusConnection": "",
     "ServiceBusJobQueueName": "jobs"
   }
