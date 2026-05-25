@@ -6,6 +6,7 @@ namespace MSPAutomationControlPlane.Services;
 public sealed class JobService(
     IJobRepository jobRepository,
     IModuleRepository moduleRepository,
+    IClientConnectionRepository clientConnectionRepository,
     IOperatorContext operatorContext)
 {
     public async Task<Result<JobRecord>> SubmitAsync(
@@ -21,10 +22,34 @@ public sealed class JobService(
             return Result<JobRecord>.Failure($"Module '{request.ModuleId}' was not found.");
         }
 
+        var clientConnection = await clientConnectionRepository.GetAsync(request.ClientConnectionId, cancellationToken);
+        if (clientConnection is null)
+        {
+            return Result<JobRecord>.Failure($"Client connection '{request.ClientConnectionId}' was not found.");
+        }
+
+        if (!clientConnection.Enabled)
+        {
+            return Result<JobRecord>.Failure($"Client connection '{request.ClientConnectionId}' is disabled.");
+        }
+
+        if (clientConnection.EnabledModuleIds.Count > 0 &&
+            !clientConnection.EnabledModuleIds.Contains(module.Manifest.Id, StringComparer.OrdinalIgnoreCase))
+        {
+            return Result<JobRecord>.Failure(
+                $"Module '{module.Manifest.Id}' is not enabled for client connection '{clientConnection.Id}'.");
+        }
+
         if (!module.Manifest.SupportedScopes.Contains(request.TargetScope.Type))
         {
             return Result<JobRecord>.Failure(
                 $"Module '{request.ModuleId}' does not support target scope '{request.TargetScope.Type}'.");
+        }
+
+        if (!clientConnection.AllowedScopes.Contains(request.TargetScope.Type))
+        {
+            return Result<JobRecord>.Failure(
+                $"Client connection '{clientConnection.Id}' does not allow target scope '{request.TargetScope.Type}'.");
         }
 
         if (request.TargetScope.Mode == TargetScopeMode.Selected && request.TargetScope.Targets.Count == 0)
@@ -38,7 +63,12 @@ public sealed class JobService(
             Id = $"job-{now:yyyyMMddHHmmss}-{Guid.NewGuid():N}",
             ModuleId = module.Manifest.Id,
             ModuleVersion = module.Manifest.Version,
-            TenantContext = request.TenantContext,
+            TenantContext = new TenantContext
+            {
+                ClientId = clientConnection.Id,
+                TenantId = clientConnection.TenantId,
+                TenantName = clientConnection.DisplayName
+            },
             TargetScope = request.TargetScope,
             Parameters = request.Parameters,
             RequestedBy = operatorContext.CurrentOperator,

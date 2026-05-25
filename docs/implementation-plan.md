@@ -91,6 +91,8 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 
 - Add APIM optional deployment tier.
 - Add Application Gateway/WAF optional deployment tier.
+- Add notification webhook subscriptions.
+- Add queue-based notification delivery.
 - Add role-based access.
 - Add approval flow for high-risk modules.
 - Add dead-letter queue handling.

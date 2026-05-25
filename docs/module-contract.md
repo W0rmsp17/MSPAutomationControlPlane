@@ -62,11 +62,7 @@ The control plane should pass a standard input document to the module.
     "displayName": "Operator Name",
     "upn": "operator@example.com"
   },
-  "tenantContext": {
-    "clientId": "client-contoso",
-    "tenantId": "11111111-1111-1111-1111-111111111111",
-    "tenantName": "Contoso"
-  },
+  "clientConnectionId": "client-contoso",
   "targetScope": {
     "type": "Users",
     "mode": "Selected",
@@ -90,6 +86,8 @@ The control plane should pass a standard input document to the module.
   }
 }
 ```
+
+The control plane resolves `clientConnectionId` to tenant context, execution identity, enabled modules, allowed scopes, and credential references. Job submitters should not provide raw tenant execution details directly.
 
 Secrets should be references. The worker or control plane identity should resolve them through Key Vault permissions.
 

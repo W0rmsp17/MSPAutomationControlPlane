@@ -23,6 +23,8 @@ The current local endpoints are:
 
 ```text
 GET  /api/health
+POST /api/client-connections
+GET  /api/client-connections
 POST /api/modules
 GET  /api/modules
 POST /api/jobs
@@ -42,6 +44,13 @@ Register the sample module:
 ```powershell
 $manifest = Get-Content .\samples\tenant-health-check.manifest.json -Raw
 Invoke-RestMethod -Uri 'http://localhost:7071/api/modules' -Method Post -ContentType 'application/json' -Body $manifest
+```
+
+Register the sample client connection:
+
+```powershell
+$client = Get-Content .\samples\client-connection-contoso.json -Raw
+Invoke-RestMethod -Uri 'http://localhost:7071/api/client-connections' -Method Post -ContentType 'application/json' -Body $client
 ```
 
 List modules:
@@ -71,4 +80,3 @@ Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}' -Method Get
 - Service Bus is not wired yet.
 - Container Apps Jobs are not wired yet.
 - Key Vault is not wired yet.
-

@@ -8,7 +8,7 @@ public sealed class SubmitJobRequest
 
     public string? ModuleVersion { get; init; }
 
-    public required TenantContext TenantContext { get; init; }
+    public required string ClientConnectionId { get; init; }
 
     public required TargetScope TargetScope { get; init; }
 
