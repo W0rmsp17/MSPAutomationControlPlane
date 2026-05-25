@@ -10,9 +10,11 @@ var host = new HostBuilder()
         services.AddSingleton<IModuleRepository, InMemoryModuleRepository>();
         services.AddSingleton<IJobRepository, InMemoryJobRepository>();
         services.AddSingleton<IClientConnectionRepository, InMemoryClientConnectionRepository>();
+        services.AddSingleton<INotificationSubscriptionRepository, InMemoryNotificationSubscriptionRepository>();
         services.AddSingleton<IOperatorContext, StubOperatorContext>();
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();
+        services.AddSingleton<NotificationSubscriptionService>();
         services.AddSingleton<JobService>();
     })
     .Build();

@@ -1,0 +1,11 @@
+{
+  "name": "MSP Ops Teams Workflow",
+  "url": "https://prod-00.australiaeast.logic.azure.com/workflows/example",
+  "eventTypes": [
+    "JobFailed",
+    "ApprovalRequired",
+    "RuntimeHealthFailed"
+  ],
+  "enabled": true,
+  "signingSecretReference": "kv://notifications/msp-ops-teams/signing-secret"
+}

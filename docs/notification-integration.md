@@ -24,6 +24,8 @@ GET    /api/notification-subscriptions
 DELETE /api/notification-subscriptions/{id}
 ```
 
+The local MVP implements this registry surface only. Webhook delivery comes later after the platform event pipeline is stable.
+
 Example subscription:
 
 ```json
@@ -103,4 +105,3 @@ Recommended sequence:
 3. Manual webhook delivery from job events.
 4. Queue-based notification delivery.
 5. Retry and dead-letter handling.
-

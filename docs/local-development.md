@@ -19,6 +19,8 @@ cd .\MSPAutomationControlPlane
 func start --port 7071
 ```
 
+The sample local settings use `UseDevelopmentStorage=true`. If Azurite is not running, the Functions host may report the storage health check as unhealthy. The current in-memory MVP endpoints still run, but Azurite should be started once storage-triggered functions or local Azure Storage testing are added.
+
 The current local endpoints are:
 
 ```text
@@ -27,6 +29,9 @@ POST /api/client-connections
 GET  /api/client-connections
 POST /api/modules
 GET  /api/modules
+POST /api/notification-subscriptions
+GET  /api/notification-subscriptions
+DELETE /api/notification-subscriptions/{id}
 POST /api/jobs
 GET  /api/jobs/{id}
 ```
@@ -57,6 +62,13 @@ List modules:
 
 ```powershell
 Invoke-RestMethod -Uri 'http://localhost:7071/api/modules' -Method Get
+```
+
+Register the sample notification subscription:
+
+```powershell
+$notification = Get-Content .\samples\notification-subscription-teams.json -Raw
+Invoke-RestMethod -Uri 'http://localhost:7071/api/notification-subscriptions' -Method Post -ContentType 'application/json' -Body $notification
 ```
 
 Submit a sample user-scoped job:
