@@ -48,6 +48,7 @@ GET  /api/notification-subscriptions
 DELETE /api/notification-subscriptions/{id}
 POST /api/jobs
 GET  /api/jobs/{id}
+GET  /api/local/job-queue
 ```
 
 ## Smoke Test
@@ -104,11 +105,17 @@ List audit events:
 Invoke-RestMethod -Uri 'http://localhost:7071/api/audit-events' -Method Get
 ```
 
+View the local in-memory queue snapshot:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:7071/api/local/job-queue' -Method Get
+```
+
 ## Current MVP Limits
 
 - Data is stored in memory and disappears when the Function App restarts.
 - Operator identity is stubbed as `operator@local.dev`.
-- Job dispatch is simulated.
+- Job dispatch is queued into an in-memory queue.
 - Service Bus is not wired yet.
 - Container Apps Jobs are not wired yet.
 - Key Vault is not wired yet.

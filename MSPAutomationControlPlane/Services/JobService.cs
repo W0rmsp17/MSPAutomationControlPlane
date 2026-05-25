@@ -1,4 +1,5 @@
 using MSPAutomationControlPlane.Domain;
+using MSPAutomationControlPlane.Queues;
 using MSPAutomationControlPlane.Repositories;
 
 namespace MSPAutomationControlPlane.Services;
@@ -7,6 +8,7 @@ public sealed class JobService(
     IJobRepository jobRepository,
     IModuleRepository moduleRepository,
     IClientConnectionRepository clientConnectionRepository,
+    IJobQueue jobQueue,
     AuditService auditService,
     IOperatorContext operatorContext)
 {
@@ -80,10 +82,20 @@ public sealed class JobService(
 
         job.Events.Add(new JobEvent("Submitted", now, "Job request accepted by the control plane.", operatorContext.CurrentOperator));
         job.Events.Add(new JobEvent("Validated", now, "Module, target scope, and request shape validated.", operatorContext.CurrentOperator));
-        job.Events.Add(new JobEvent("Queued", now, "Job marked as queued in local MVP mode.", operatorContext.CurrentOperator));
-        job.Events.Add(new JobEvent("DispatchSkippedForMvp", now, "Service Bus and Container Apps dispatch are not wired yet.", "control-plane"));
+        job.Events.Add(new JobEvent("Queued", now, "Job dispatch message queued.", operatorContext.CurrentOperator));
 
         await jobRepository.AddAsync(job, cancellationToken);
+        await jobQueue.EnqueueAsync(
+            new JobDispatchMessage
+            {
+                JobId = job.Id,
+                ModuleId = job.ModuleId,
+                ModuleVersion = job.ModuleVersion,
+                ClientConnectionId = clientConnection.Id,
+                QueuedAt = now
+            },
+            cancellationToken);
+
         await auditService.WriteAsync(
             AuditEventType.JobSubmitted,
             operatorContext.CurrentOperator,

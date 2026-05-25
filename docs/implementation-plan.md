@@ -23,6 +23,7 @@
 - Add job submission endpoint.
 - Add job status endpoint.
 - Add Table Storage repositories.
+- Add local queue abstraction.
 - Add basic validation.
 
 ## Phase 3: Local Worker Loop

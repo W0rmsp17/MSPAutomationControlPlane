@@ -1,5 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MSPAutomationControlPlane.Queues;
 using MSPAutomationControlPlane.Repositories;
 using MSPAutomationControlPlane.Services;
 
@@ -27,6 +28,7 @@ var host = new HostBuilder()
         }
 
         services.AddSingleton<IOperatorContext, StubOperatorContext>();
+        services.AddSingleton<IJobQueue, InMemoryJobQueue>();
         services.AddSingleton<AuditService>();
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();
