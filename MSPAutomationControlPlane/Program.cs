@@ -2,12 +2,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using MSPAutomationControlPlane.Queues;
 using MSPAutomationControlPlane.Repositories;
+using MSPAutomationControlPlane.Security;
 using MSPAutomationControlPlane.Services;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
+    .ConfigureFunctionsWorkerDefaults(worker =>
+    {
+        worker.UseMiddleware<EntraAuthorizationMiddleware>();
+    })
     .ConfigureServices(services =>
     {
+        services.AddSingleton(ControlPlaneAuthOptions.FromEnvironment());
+        services.AddSingleton<EntraTokenValidator>();
+
         var repositoryProvider = Environment.GetEnvironmentVariable("ControlPlane__RepositoryProvider");
         if (string.Equals(repositoryProvider, "TableStorage", StringComparison.OrdinalIgnoreCase))
         {

@@ -1,7 +1,9 @@
 const config = window.MSP_CONTROL_PLANE_CONFIG || {};
 const state = {
   apiBaseUrl: localStorage.getItem("apiBaseUrl") || config.apiBaseUrl || "",
-  apiKey: config.apiKey || "",
+  auth: config.auth || {},
+  msalClient: null,
+  msalAccount: null,
   clients: [],
   modules: [],
   notifications: [],
@@ -104,16 +106,74 @@ function endpoint(path) {
   return `${state.apiBaseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
 }
 
+function authConfigured() {
+  return Boolean(state.auth.tenantId && state.auth.clientId && state.auth.apiScope && window.msal);
+}
+
+async function initializeAuth() {
+  if (!authConfigured()) {
+    return;
+  }
+
+  state.msalClient = new msal.PublicClientApplication({
+    auth: {
+      clientId: state.auth.clientId,
+      authority: `https://login.microsoftonline.com/${state.auth.tenantId}`,
+      redirectUri: window.location.origin
+    },
+    cache: {
+      cacheLocation: "sessionStorage"
+    }
+  });
+
+  const redirectResult = await state.msalClient.handleRedirectPromise();
+  state.msalAccount = redirectResult?.account || state.msalClient.getAllAccounts()[0] || null;
+  if (!state.msalAccount) {
+    await state.msalClient.loginRedirect({
+      scopes: [state.auth.apiScope]
+    });
+  }
+}
+
+async function acquireAccessToken() {
+  if (!authConfigured()) {
+    return null;
+  }
+
+  if (!state.msalAccount) {
+    await initializeAuth();
+  }
+
+  try {
+    const result = await state.msalClient.acquireTokenSilent({
+      account: state.msalAccount,
+      scopes: [state.auth.apiScope]
+    });
+    return result.accessToken;
+  } catch (error) {
+    if (error instanceof msal.InteractionRequiredAuthError) {
+      await state.msalClient.acquireTokenRedirect({
+        account: state.msalAccount,
+        scopes: [state.auth.apiScope]
+      });
+      return null;
+    }
+
+    throw error;
+  }
+}
+
 async function api(path, options = {}) {
   if (!state.apiBaseUrl) {
     throw new Error("Set the API base URL before calling the control plane.");
   }
 
+  const accessToken = await acquireAccessToken();
   const response = await fetch(endpoint(path), {
     ...options,
     headers: {
       "content-type": "application/json",
-      ...(state.apiKey ? { "x-functions-key": state.apiKey } : {}),
+      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
       ...(options.headers || {})
     }
   });
@@ -358,9 +418,19 @@ wireForms();
 seedTextareas();
 render();
 
-if (state.apiBaseUrl) {
-  refreshAll();
-} else {
-  el("settings-panel").classList.remove("hidden");
-  setHealth("Configure", "warn");
+async function start() {
+  try {
+    await initializeAuth();
+    if (state.apiBaseUrl) {
+      await refreshAll();
+    } else {
+      el("settings-panel").classList.remove("hidden");
+      setHealth("Configure", "warn");
+    }
+  } catch (error) {
+    setHealth("Attention", "warn");
+    setMessage(error.message, "bad");
+  }
 }
+
+start();

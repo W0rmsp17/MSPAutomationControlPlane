@@ -11,7 +11,7 @@ public sealed class JobFunctions(JobService jobService)
 {
     [Function("SubmitJob")]
     public async Task<HttpResponseData> SubmitJob(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "jobs")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "jobs")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var submitRequest = await request.ReadJsonAsync<SubmitJobRequest>(cancellationToken);
@@ -31,7 +31,7 @@ public sealed class JobFunctions(JobService jobService)
 
     [Function("GetJob")]
     public async Task<HttpResponseData> GetJob(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "jobs/{id}")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "jobs/{id}")] HttpRequestData request,
         string id,
         CancellationToken cancellationToken)
     {

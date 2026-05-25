@@ -10,7 +10,7 @@ public sealed class AuditFunctions(AuditService auditService)
 {
     [Function("ListAuditEvents")]
     public async Task<HttpResponseData> ListAuditEvents(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "audit-events")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "audit-events")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var auditEvents = await auditService.ListAsync(cancellationToken);

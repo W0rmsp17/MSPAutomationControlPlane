@@ -13,7 +13,7 @@ public sealed class QueueFunctions(
 {
     [Function("ListLocalJobQueue")]
     public async Task<HttpResponseData> ListLocalJobQueue(
-        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "local/job-queue")] HttpRequestData request)
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "local/job-queue")] HttpRequestData request)
     {
         if (jobQueue is not InMemoryJobQueue inMemoryJobQueue)
         {
@@ -27,7 +27,7 @@ public sealed class QueueFunctions(
 
     [Function("DispatchNextLocalJob")]
     public async Task<HttpResponseData> DispatchNextLocalJob(
-        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "local/dispatch-next")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "local/dispatch-next")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var result = await localJobDispatcher.DispatchNextAsync(cancellationToken);

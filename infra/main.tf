@@ -181,6 +181,18 @@ resource "azurerm_windows_function_app" "control_api" {
     Artifacts__ContainerName                 = azurerm_storage_container.artifacts.name
     KeyVault__Uri                            = azurerm_key_vault.main.vault_uri
   }
+
+  lifecycle {
+    ignore_changes = [
+      app_settings["ControlPlane__Auth__Enabled"],
+      app_settings["ControlPlane__Auth__TenantId"],
+      app_settings["ControlPlane__Auth__Audience"],
+      app_settings["ControlPlane__Auth__RequiredScope"],
+      app_settings["ControlPlane__Auth__AllowedUserObjectIds"],
+      app_settings["ControlPlane__Auth__AllowedGroupIds"],
+      app_settings["ControlPlane__Auth__AllowedRoles"]
+    ]
+  }
 }
 
 resource "azurerm_static_web_app" "frontend" {

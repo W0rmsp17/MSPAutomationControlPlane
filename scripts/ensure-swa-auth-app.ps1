@@ -2,6 +2,8 @@
 param(
     [string]$TerraformPath = "terraform",
     [string]$DisplayName = "MSP Automation Control Plane - Static Web App",
+    [string[]]$AllowedUserObjectIds = @(),
+    [string[]]$AllowedGroupIds = @(),
     [int]$SecretYears = 1
 )
 
@@ -43,9 +45,12 @@ function Invoke-JsonCommand {
 }
 
 $resourceGroupName = Get-TerraformOutput -Name "resource_group_name"
+$mspTenantId = Get-TerraformOutput -Name "msp_tenant_id"
+$functionAppName = Get-TerraformOutput -Name "function_app_name"
 $staticWebAppName = Get-TerraformOutput -Name "static_web_app_name"
 $staticWebAppHost = Get-TerraformOutput -Name "static_web_app_default_host_name"
 $redirectUri = "https://$staticWebAppHost/.auth/login/aad/callback"
+$spaRedirectUri = "https://$staticWebAppHost"
 
 $existingApp = Invoke-JsonCommand -Arguments @(
     "ad",
@@ -84,6 +89,83 @@ Invoke-JsonCommand -Arguments @(
     $redirectUri
 ) | Out-Null
 
+if ($AllowedUserObjectIds.Count -eq 0) {
+    $signedInUser = Invoke-JsonCommand -Arguments @(
+        "ad",
+        "signed-in-user",
+        "show"
+    )
+    $AllowedUserObjectIds = @($signedInUser.id)
+}
+
+$scope = $app.api.oauth2PermissionScopes | Where-Object { $_.value -eq "access_as_user" } | Select-Object -First 1
+if (-not $scope) {
+    $scope = [pscustomobject]@{
+        id                      = [guid]::NewGuid().ToString()
+        adminConsentDescription = "Allow the management UI to call the MSP Automation Control Plane API as the signed-in operator."
+        adminConsentDisplayName = "Access MSP Automation Control Plane API"
+        isEnabled               = $true
+        type                    = "User"
+        userConsentDescription  = "Call the MSP Automation Control Plane API as you."
+        userConsentDisplayName  = "Access MSP Automation Control Plane"
+        value                   = "access_as_user"
+    }
+}
+
+$adminRole = $app.appRoles | Where-Object { $_.value -eq "ControlPlane.Admin" } | Select-Object -First 1
+if (-not $adminRole) {
+    $adminRole = [pscustomobject]@{
+        allowedMemberTypes = @("User", "Application")
+        description        = "Full administrative access to the MSP Automation Control Plane."
+        displayName        = "Control Plane Admin"
+        id                 = [guid]::NewGuid().ToString()
+        isEnabled          = $true
+        value              = "ControlPlane.Admin"
+    }
+}
+
+$operatorRole = $app.appRoles | Where-Object { $_.value -eq "ControlPlane.Operator" } | Select-Object -First 1
+if (-not $operatorRole) {
+    $operatorRole = [pscustomobject]@{
+        allowedMemberTypes = @("User")
+        description        = "Operator access to the MSP Automation Control Plane."
+        displayName        = "Control Plane Operator"
+        id                 = [guid]::NewGuid().ToString()
+        isEnabled          = $true
+        value              = "ControlPlane.Operator"
+    }
+}
+
+$appPatch = @{
+    identifierUris = @("api://$($app.appId)")
+    api            = @{
+        oauth2PermissionScopes = @($scope)
+    }
+    appRoles       = @($adminRole, $operatorRole)
+    spa            = @{
+        redirectUris = @($spaRedirectUri)
+    }
+}
+
+$appPatchJson = $appPatch | ConvertTo-Json -Depth 12 -Compress
+$appPatchFile = New-TemporaryFile
+try {
+    Set-Content -LiteralPath $appPatchFile -Value $appPatchJson -Encoding utf8
+    & az rest `
+        --method PATCH `
+        --uri "https://graph.microsoft.com/v1.0/applications/$($app.id)" `
+        --headers "Content-Type=application/json" `
+        --body "@$appPatchFile" `
+        --output none
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to configure API scope, app roles, and SPA redirect URI on the app registration."
+    }
+}
+finally {
+    Remove-Item -LiteralPath $appPatchFile -Force -ErrorAction SilentlyContinue
+}
+
 $endDate = (Get-Date).AddYears($SecretYears).ToString("yyyy-MM-dd")
 $secret = Invoke-JsonCommand -Arguments @(
     "ad",
@@ -108,6 +190,25 @@ if ($LASTEXITCODE -ne 0) {
     throw "Failed to update Static Web App authentication settings."
 }
 
+& az functionapp config appsettings set `
+    --name $functionAppName `
+    --resource-group $resourceGroupName `
+    --settings `
+        "ControlPlane__Auth__Enabled=true" `
+        "ControlPlane__Auth__TenantId=$mspTenantId" `
+        "ControlPlane__Auth__Audience=api://$($app.appId)" `
+        "ControlPlane__Auth__RequiredScope=access_as_user" `
+        "ControlPlane__Auth__AllowedUserObjectIds=$($AllowedUserObjectIds -join ',')" `
+        "ControlPlane__Auth__AllowedGroupIds=$($AllowedGroupIds -join ',')" `
+    --output none
+
+if ($LASTEXITCODE -ne 0) {
+    throw "Failed to update Function App authentication settings."
+}
+
 Write-Host "Static Web App authentication app settings updated." -ForegroundColor Green
+Write-Host "Function App API token validation settings updated." -ForegroundColor Green
 Write-Host "App registration client ID: $($app.appId)"
+Write-Host "API scope: api://$($app.appId)/access_as_user"
 Write-Host "Redirect URI: $redirectUri"
+Write-Host "SPA redirect URI: $spaRedirectUri"

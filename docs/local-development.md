@@ -27,6 +27,22 @@ Local development defaults to in-memory repositories:
 "ControlPlane__RepositoryProvider": "InMemory"
 ```
 
+Local development also keeps API authentication disabled unless explicitly enabled:
+
+```json
+"ControlPlane__Auth__Enabled": "false"
+```
+
+Deployed environments enable API authentication through `ensure-swa-auth-app.ps1`. If you want to test token validation locally, configure:
+
+```json
+"ControlPlane__Auth__Enabled": "true",
+"ControlPlane__Auth__TenantId": "<msp-tenant-id>",
+"ControlPlane__Auth__Audience": "api://<app-client-id>",
+"ControlPlane__Auth__RequiredScope": "access_as_user",
+"ControlPlane__Auth__AllowedUserObjectIds": "<operator-object-id>"
+```
+
 To test Azure Table Storage adapters locally, start Azurite and set:
 
 ```json
@@ -143,6 +159,5 @@ Invoke-RestMethod -Uri 'http://localhost:7071/api/local/dispatch-next' -Method P
 - Job dispatch is queued into an in-memory queue.
 - Local dispatch simulates worker execution and marks the job as `Succeeded`.
 - Service Bus dispatch uses the same `JobDispatcher` service when `ControlPlane__QueueProvider` is set to `ServiceBus`.
-- Service Bus is not wired yet.
 - Container Apps Jobs are not wired yet.
 - Key Vault is not wired yet.

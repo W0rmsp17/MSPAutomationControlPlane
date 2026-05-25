@@ -9,6 +9,12 @@
     "ControlPlane__QueueProvider": "InMemory",
     "ControlPlane__ServiceBusConnectionString": "",
     "ControlPlane__JobQueueName": "jobs",
+    "ControlPlane__Auth__Enabled": "false",
+    "ControlPlane__Auth__TenantId": "",
+    "ControlPlane__Auth__Audience": "",
+    "ControlPlane__Auth__RequiredScope": "access_as_user",
+    "ControlPlane__Auth__AllowedUserObjectIds": "",
+    "ControlPlane__Auth__AllowedGroupIds": "",
     "ServiceBusConnection": "",
     "ServiceBusJobQueueName": "jobs"
   }

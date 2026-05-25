@@ -102,7 +102,13 @@ If Container Apps is used for worker execution, the Azure subscription must have
 az provider register --namespace Microsoft.App
 ```
 
-The Static Web App is configured for Microsoft Entra sign-in against the MSP tenant. The Function App HTTP API uses function-key authorization, and `deploy-frontend.ps1` injects the key into the protected Static Web App package at deployment time. A future hardening step should replace this shared key with Entra-issued API tokens.
+The Static Web App is configured for Microsoft Entra sign-in against the MSP tenant. `ensure-swa-auth-app.ps1` also exposes an API scope on the same app registration and configures the Function App to validate MSP-tenant bearer tokens. `deploy-frontend.ps1` injects the API base URL plus MSAL client settings into the protected Static Web App package. By default, API access is limited to the signed-in implementor's Entra user object ID; additional allowed user IDs or group IDs can be passed to `ensure-swa-auth-app.ps1`.
+
+The first browser launch after enabling the API scope may require a one-time Microsoft Entra consent prompt. In production, an MSP can assign access through an operator group and pass that group object ID during bootstrap:
+
+```powershell
+.\scripts\ensure-swa-auth-app.ps1 -AllowedGroupIds "<operator-group-object-id>"
+```
 
 ## Core Concepts
 
@@ -157,6 +163,7 @@ This repository now has a deployable MVP foundation:
 - Table Storage persistence provider.
 - Terraform deployment for the central MSP control plane.
 - Static management UI hosted on Azure Static Web Apps.
+- Microsoft Entra protected management UI and Function API bearer-token validation.
 - PowerShell scripts for pre-discovery, Terraform deployment, Function App zip deployment, Static Web App deployment, and post-deployment outputs.
 - Client connection bootstrap helper for target tenant app registration metadata.
 

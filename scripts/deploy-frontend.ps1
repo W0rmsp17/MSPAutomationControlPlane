@@ -3,6 +3,7 @@ param(
     [string]$TerraformPath = "terraform",
     [string]$SourcePath = "frontend",
     [string]$PackageRoot = ".deploy",
+    [string]$AuthAppDisplayName = "MSP Automation Control Plane - Static Web App",
     [switch]$SkipDeploy
 )
 
@@ -50,7 +51,6 @@ function Get-TerraformOutput {
 $resourceGroupName = Get-TerraformOutput -Name "resource_group_name"
 $mspTenantId = Get-TerraformOutput -Name "msp_tenant_id"
 $functionHostName = Get-TerraformOutput -Name "function_app_default_hostname"
-$functionAppName = Get-TerraformOutput -Name "function_app_name"
 $staticWebAppName = Get-TerraformOutput -Name "static_web_app_name"
 $apiBaseUrl = "https://$functionHostName/api"
 
@@ -65,20 +65,24 @@ if (Test-Path $publishPath) {
 Copy-Item -Path $sourceRoot -Destination $publishPath -Recurse
 
 $configPath = Join-Path $publishPath "app-config.js"
-$functionKey = az functionapp keys list `
-    --name $functionAppName `
-    --resource-group $resourceGroupName `
-    --query "functionKeys.default" `
-    --output tsv
+$authApp = az ad app list `
+    --display-name $AuthAppDisplayName `
+    --query "[0]" `
+    --output json | ConvertFrom-Json
 
-if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($functionKey)) {
-    throw "Could not read the Function App default function key."
+if ($LASTEXITCODE -ne 0 -or $null -eq $authApp -or [string]::IsNullOrWhiteSpace($authApp.appId)) {
+    throw "Could not find the Static Web App/API auth app registration. Run scripts\ensure-swa-auth-app.ps1 first."
 }
 
+$apiScope = "api://$($authApp.appId)/access_as_user"
 @"
 window.MSP_CONTROL_PLANE_CONFIG = {
   apiBaseUrl: "$apiBaseUrl",
-  apiKey: "$functionKey"
+  auth: {
+    tenantId: "$mspTenantId",
+    clientId: "$($authApp.appId)",
+    apiScope: "$apiScope"
+  }
 };
 "@ | Set-Content -Path $configPath -Encoding utf8
 

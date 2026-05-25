@@ -31,13 +31,13 @@ deploy.ps1
   -> Terraform init/validate/plan/apply.
 
 ensure-swa-auth-app.ps1
-  -> Create or reuse an MSP-tenant Entra app registration for Static Web App authentication and store its client settings.
+  -> Create or reuse an MSP-tenant Entra app registration for Static Web App authentication, expose an API scope, and configure Function API token validation.
 
 deploy-function.ps1
   -> Publish and zip-deploy the .NET isolated Azure Functions control API.
 
 deploy-frontend.ps1
-  -> Inject the API base URL and deploy the static management UI to Azure Static Web Apps.
+  -> Inject the API base URL and MSAL client settings, then deploy the static management UI to Azure Static Web Apps.
 
 post-deploy.ps1
   -> Read Terraform outputs and print endpoint/runtime values.
@@ -65,7 +65,17 @@ Terraform should deploy:
 
 Subscriptions using Container Apps must have the `Microsoft.App` resource provider registered before the Container Apps Environment can be created.
 
-The MVP management UI is protected with Static Web Apps authentication using a Microsoft Entra app registration in the MSP tenant. The Function App HTTP API uses function-key authorization, with the key injected only into the protected Static Web App package during deployment. This prevents anonymous API calls while keeping the first version simple. A later production hardening phase should move the API to Entra token validation instead of a shared function key.
+The MVP management UI is protected with Static Web Apps authentication using a Microsoft Entra app registration in the MSP tenant. The same app registration exposes an `access_as_user` API scope for the Function App API. The frontend uses MSAL to request an MSP-tenant access token and sends it as a bearer token to the Function App.
+
+The Function App validates issuer, audience, token lifetime, signing keys, required scope, and operator authorization. Operator authorization can be controlled through allowed user object IDs, group object IDs, or app roles. The bootstrap script defaults API access to the signed-in implementor so a fresh deployment is not accidentally open to every authenticated MSP tenant user.
+
+The first operator sign-in after the API scope is created may require Microsoft Entra consent for the management UI to call the control-plane API. For MSP production use, prefer an operator group and run:
+
+```powershell
+.\scripts\ensure-swa-auth-app.ps1 -AllowedGroupIds "<operator-group-object-id>"
+```
+
+For lab deployments or a single implementor, the default signed-in user object ID is enough.
 
 ## Configurable Inputs
 
@@ -77,6 +87,8 @@ Initial deployment inputs:
 - Subscription ID.
 - Tenant ID.
 - Operator/admin group object ID.
+- Optional allowed operator user object IDs.
+- Optional allowed operator group object IDs.
 - Allowed container registry list.
 - Storage SKU.
 - Service Bus SKU.
