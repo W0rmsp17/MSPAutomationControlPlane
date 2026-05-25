@@ -11,7 +11,7 @@
 
 ## Phase 2: Control Plane API MVP
 
-- Create .NET Azure Functions project.
+- Replace the transitional ASP.NET Core scaffold with a .NET isolated Azure Functions project.
 - Add health endpoint.
 - Add client tenant model.
 - Add module registry model.
@@ -34,7 +34,7 @@
 - Add Terraform for Container Apps Environment.
 - Add Container Apps Job definition.
 - Add worker image build and publish steps.
-- Trigger jobs from queued messages.
+- Add Service Bus-triggered Function to dispatch queued jobs.
 - Capture output artifacts.
 
 ## Phase 5: First Useful Module

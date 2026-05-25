@@ -40,7 +40,7 @@ The control plane should be serverless-first, but not force every automation to 
 Recommended MVP architecture:
 
 - Frontend: Azure Static Web Apps or App Service.
-- API: Azure Functions using .NET.
+- API: Azure Functions using .NET isolated worker.
 - Queue: Azure Service Bus for job dispatch.
 - Worker runtime: Azure Container Apps Jobs for snap-in modules.
 - State: Azure Table Storage for the first version, with a clean repository layer so it can move to Cosmos DB or Azure SQL later.
@@ -48,6 +48,21 @@ Recommended MVP architecture:
 - Identity: Managed identities for Azure resources, with per-client Microsoft Entra app registrations or federated identity where needed.
 - Observability: Application Insights and Log Analytics.
 - Infrastructure: Terraform.
+
+## Runtime Decision
+
+The controller layer will use an event-driven Azure Functions model rather than an always-on ASP.NET Core controller app.
+
+In this model, the control plane is a set of focused functions:
+
+- HTTP-triggered functions for operator/API requests.
+- Service Bus-triggered functions for queued job dispatch.
+- Timer-triggered functions for cleanup, stale job checks, and scheduled maintenance.
+- Callback functions for snap-in job completion.
+
+Functions wake up for a specific event, read and update shared platform state, call the required Azure service, then finish. Durable state lives in Table Storage, Blob Storage, Key Vault, and Service Bus rather than in a long-running process.
+
+The current ASP.NET Core scaffold is transitional and should be replaced with a .NET isolated Azure Functions project before implementation begins.
 
 ## Core Concepts
 

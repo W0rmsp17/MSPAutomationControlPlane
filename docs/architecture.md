@@ -4,12 +4,14 @@
 
 ```text
 Admin UI
-  -> Control Plane API
+  -> HTTP-triggered Azure Function
   -> Tenant, module, parameter, and scope validation
   -> Job persistence and audit event
   -> Service Bus queue
+  -> Service Bus-triggered Azure Function
   -> Container Apps Job worker
   -> Snap-in module
+  -> Callback HTTP-triggered Azure Function
   -> Output artifact and status update
   -> Run history and audit view
 ```
@@ -31,7 +33,7 @@ Azure Static Web Apps is the preferred first option because it is low-cost, simp
 
 ### Control Plane API
 
-Azure Functions should host the API. It is responsible for:
+Azure Functions isolated .NET should host the control API and controller logic. It is responsible for:
 
 - Authentication and authorization.
 - Client tenant registration.
@@ -46,7 +48,22 @@ Azure Functions should host the API. It is responsible for:
 - Receiving worker callbacks.
 - Exposing run history.
 
-The API should not run long automation tasks directly.
+The API should not run long automation tasks directly. The Functions app acts as an event-driven controller and mediation layer around durable Azure services.
+
+The initial function set should include:
+
+- `GET /api/tenants`
+- `POST /api/tenants`
+- `GET /api/modules`
+- `POST /api/modules`
+- `POST /api/jobs`
+- `GET /api/jobs/{id}`
+- `POST /api/jobs/{id}/approve`
+- `POST /api/jobs/{id}/callback`
+- Service Bus trigger for job dispatch.
+- Timer trigger for stale job checks and scheduled maintenance.
+
+Each function should do a small amount of work, persist state, and stop. The shared state reservoir is Table Storage, Blob Storage, Key Vault, and Service Bus.
 
 ### Control Services
 
@@ -63,6 +80,24 @@ The control plane should provide shared services that snap-ins can consume throu
 - Audit history.
 
 These services are the main reason for the platform. A snap-in should bring business logic, while the control plane handles the operational wrapper around it.
+
+### Runtime Shape
+
+The project will not use an always-on controller app for the MVP. The runtime shape is:
+
+```text
+Static Web App frontend
+        |
+Azure Functions control plane
+        |
+Table Storage + Blob Storage + Key Vault
+        |
+Service Bus queue
+        |
+Container Apps Jobs
+```
+
+This keeps the controller cheap at idle, event-driven, and aligned with the serverless design. If the platform later needs richer middleware or always-on APIs, the contract should still allow the API layer to move to Container Apps without changing snap-in modules.
 
 ### Queue
 
