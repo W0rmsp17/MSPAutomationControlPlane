@@ -34,6 +34,20 @@ To test Azure Table Storage adapters locally, start Azurite and set:
 "ControlPlane__StorageConnectionString": "UseDevelopmentStorage=true"
 ```
 
+Local development also defaults to the in-memory queue:
+
+```json
+"ControlPlane__QueueProvider": "InMemory"
+```
+
+Deployed environments can use Service Bus by setting:
+
+```json
+"ControlPlane__QueueProvider": "ServiceBus",
+"ControlPlane__ServiceBusConnectionString": "<service-bus-connection-string>",
+"ControlPlane__JobQueueName": "jobs"
+```
+
 The current local endpoints are:
 
 ```text

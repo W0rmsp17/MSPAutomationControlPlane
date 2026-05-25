@@ -28,7 +28,18 @@ var host = new HostBuilder()
         }
 
         services.AddSingleton<IOperatorContext, StubOperatorContext>();
-        services.AddSingleton<IJobQueue, InMemoryJobQueue>();
+
+        var queueProvider = Environment.GetEnvironmentVariable("ControlPlane__QueueProvider");
+        if (string.Equals(queueProvider, "ServiceBus", StringComparison.OrdinalIgnoreCase))
+        {
+            services.AddSingleton(ServiceBusQueueOptions.FromEnvironment());
+            services.AddSingleton<IJobQueue, ServiceBusJobQueue>();
+        }
+        else
+        {
+            services.AddSingleton<IJobQueue, InMemoryJobQueue>();
+        }
+
         services.AddSingleton<AuditService>();
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();

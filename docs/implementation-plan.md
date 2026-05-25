@@ -24,6 +24,7 @@
 - Add job status endpoint.
 - Add Table Storage repositories.
 - Add local queue abstraction.
+- Add Service Bus queue provider.
 - Add local dispatch simulation.
 - Add basic validation.
 
