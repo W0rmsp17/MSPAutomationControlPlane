@@ -11,7 +11,7 @@ public sealed class NotificationSubscriptionFunctions(NotificationSubscriptionSe
 {
     [Function("RegisterNotificationSubscription")]
     public async Task<HttpResponseData> RegisterNotificationSubscription(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "notification-subscriptions")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "notification-subscriptions")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var subscription = await request.ReadJsonAsync<NotificationSubscription>(cancellationToken);
@@ -31,7 +31,7 @@ public sealed class NotificationSubscriptionFunctions(NotificationSubscriptionSe
 
     [Function("ListNotificationSubscriptions")]
     public async Task<HttpResponseData> ListNotificationSubscriptions(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "notification-subscriptions")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "notification-subscriptions")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var subscriptions = await notificationSubscriptionService.ListAsync(cancellationToken);
@@ -40,7 +40,7 @@ public sealed class NotificationSubscriptionFunctions(NotificationSubscriptionSe
 
     [Function("DeleteNotificationSubscription")]
     public async Task<HttpResponseData> DeleteNotificationSubscription(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "notification-subscriptions/{id}")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "delete", Route = "notification-subscriptions/{id}")] HttpRequestData request,
         string id,
         CancellationToken cancellationToken)
     {

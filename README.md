@@ -90,6 +90,7 @@ Create an environment-specific `terraform.tfvars` file from the relevant example
 
 ```powershell
 .\scripts\deploy.ps1 -Environment cholbing-dev -Apply -AutoApprove
+.\scripts\ensure-swa-auth-app.ps1
 .\scripts\deploy-function.ps1
 .\scripts\deploy-frontend.ps1
 .\scripts\post-deploy.ps1
@@ -100,6 +101,8 @@ If Container Apps is used for worker execution, the Azure subscription must have
 ```powershell
 az provider register --namespace Microsoft.App
 ```
+
+The Static Web App is configured for Microsoft Entra sign-in against the MSP tenant. The Function App HTTP API uses function-key authorization, and `deploy-frontend.ps1` injects the key into the protected Static Web App package at deployment time. A future hardening step should replace this shared key with Entra-issued API tokens.
 
 ## Core Concepts
 

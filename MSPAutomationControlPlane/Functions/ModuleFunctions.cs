@@ -11,7 +11,7 @@ public sealed class ModuleFunctions(ModuleRegistryService moduleRegistryService)
 {
     [Function("RegisterModule")]
     public async Task<HttpResponseData> RegisterModule(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "modules")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "modules")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var manifest = await request.ReadJsonAsync<ModuleManifest>(cancellationToken);
@@ -31,7 +31,7 @@ public sealed class ModuleFunctions(ModuleRegistryService moduleRegistryService)
 
     [Function("ListModules")]
     public async Task<HttpResponseData> ListModules(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "modules")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "modules")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var modules = await moduleRegistryService.ListAsync(cancellationToken);

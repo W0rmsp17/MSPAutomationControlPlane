@@ -48,7 +48,9 @@ function Get-TerraformOutput {
 }
 
 $resourceGroupName = Get-TerraformOutput -Name "resource_group_name"
+$mspTenantId = Get-TerraformOutput -Name "msp_tenant_id"
 $functionHostName = Get-TerraformOutput -Name "function_app_default_hostname"
+$functionAppName = Get-TerraformOutput -Name "function_app_name"
 $staticWebAppName = Get-TerraformOutput -Name "static_web_app_name"
 $apiBaseUrl = "https://$functionHostName/api"
 
@@ -63,11 +65,30 @@ if (Test-Path $publishPath) {
 Copy-Item -Path $sourceRoot -Destination $publishPath -Recurse
 
 $configPath = Join-Path $publishPath "app-config.js"
+$functionKey = az functionapp keys list `
+    --name $functionAppName `
+    --resource-group $resourceGroupName `
+    --query "functionKeys.default" `
+    --output tsv
+
+if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($functionKey)) {
+    throw "Could not read the Function App default function key."
+}
+
 @"
 window.MSP_CONTROL_PLANE_CONFIG = {
-  apiBaseUrl: "$apiBaseUrl"
+  apiBaseUrl: "$apiBaseUrl",
+  apiKey: "$functionKey"
 };
 "@ | Set-Content -Path $configPath -Encoding utf8
+
+$authTemplatePath = Join-Path $publishPath "staticwebapp.config.template.json"
+$authConfigPath = Join-Path $publishPath "staticwebapp.config.json"
+if (Test-Path $authTemplatePath) {
+    (Get-Content $authTemplatePath -Raw).Replace("__MSP_TENANT_ID__", $mspTenantId) |
+        Set-Content -Path $authConfigPath -Encoding utf8
+    Remove-Item -LiteralPath $authTemplatePath -Force
+}
 
 if ($SkipDeploy) {
     Write-Host "Static Web App package prepared: $publishPath" -ForegroundColor Green

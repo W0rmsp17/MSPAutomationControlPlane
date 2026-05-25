@@ -11,7 +11,7 @@ public sealed class ClientConnectionFunctions(ClientConnectionService clientConn
 {
     [Function("RegisterClientConnection")]
     public async Task<HttpResponseData> RegisterClientConnection(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "client-connections")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = "client-connections")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var clientConnection = await request.ReadJsonAsync<ClientConnection>(cancellationToken);
@@ -31,7 +31,7 @@ public sealed class ClientConnectionFunctions(ClientConnectionService clientConn
 
     [Function("ListClientConnections")]
     public async Task<HttpResponseData> ListClientConnections(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "client-connections")] HttpRequestData request,
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "client-connections")] HttpRequestData request,
         CancellationToken cancellationToken)
     {
         var connections = await clientConnectionService.ListAsync(cancellationToken);

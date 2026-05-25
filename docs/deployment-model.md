@@ -30,6 +30,9 @@ bootstrap.ps1
 deploy.ps1
   -> Terraform init/validate/plan/apply.
 
+ensure-swa-auth-app.ps1
+  -> Create or reuse an MSP-tenant Entra app registration for Static Web App authentication and store its client settings.
+
 deploy-function.ps1
   -> Publish and zip-deploy the .NET isolated Azure Functions control API.
 
@@ -61,6 +64,8 @@ Terraform should deploy:
 - Managed identities and RBAC assignments.
 
 Subscriptions using Container Apps must have the `Microsoft.App` resource provider registered before the Container Apps Environment can be created.
+
+The MVP management UI is protected with Static Web Apps authentication using a Microsoft Entra app registration in the MSP tenant. The Function App HTTP API uses function-key authorization, with the key injected only into the protected Static Web App package during deployment. This prevents anonymous API calls while keeping the first version simple. A later production hardening phase should move the API to Entra token validation instead of a shared function key.
 
 ## Configurable Inputs
 

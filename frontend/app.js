@@ -1,6 +1,7 @@
 const config = window.MSP_CONTROL_PLANE_CONFIG || {};
 const state = {
   apiBaseUrl: localStorage.getItem("apiBaseUrl") || config.apiBaseUrl || "",
+  apiKey: config.apiKey || "",
   clients: [],
   modules: [],
   notifications: [],
@@ -101,6 +102,7 @@ async function api(path, options = {}) {
     ...options,
     headers: {
       "content-type": "application/json",
+      ...(state.apiKey ? { "x-functions-key": state.apiKey } : {}),
       ...(options.headers || {})
     }
   });

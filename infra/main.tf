@@ -190,6 +190,12 @@ resource "azurerm_static_web_app" "frontend" {
   sku_tier            = var.static_web_app_sku_tier
   sku_size            = var.static_web_app_sku_size
   tags                = local.tags
+
+  lifecycle {
+    ignore_changes = [
+      app_settings
+    ]
+  }
 }
 
 resource "azurerm_container_app_environment" "workers" {

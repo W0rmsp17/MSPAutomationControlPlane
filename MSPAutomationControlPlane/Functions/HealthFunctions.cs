@@ -9,7 +9,7 @@ public sealed class HealthFunctions
 {
     [Function("GetHealth")]
     public static Task<HttpResponseData> GetHealth(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "health")] HttpRequestData request)
+        [HttpTrigger(AuthorizationLevel.Function, "get", Route = "health")] HttpRequestData request)
     {
         return request.WriteJsonAsync(HttpStatusCode.OK, new
         {
