@@ -1,25 +1,18 @@
-var builder = WebApplication.CreateBuilder(args);
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using MSPAutomationControlPlane.Repositories;
+using MSPAutomationControlPlane.Services;
 
-// Add services to the container.
+var host = new HostBuilder()
+    .ConfigureFunctionsWorkerDefaults()
+    .ConfigureServices(services =>
+    {
+        services.AddSingleton<IModuleRepository, InMemoryModuleRepository>();
+        services.AddSingleton<IJobRepository, InMemoryJobRepository>();
+        services.AddSingleton<IOperatorContext, StubOperatorContext>();
+        services.AddSingleton<ModuleRegistryService>();
+        services.AddSingleton<JobService>();
+    })
+    .Build();
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+host.Run();

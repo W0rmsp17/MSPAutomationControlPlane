@@ -1,6 +1,0 @@
-@MSPAutomationControlPlane_HostAddress = http://localhost:5193
-
-GET {{MSPAutomationControlPlane_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

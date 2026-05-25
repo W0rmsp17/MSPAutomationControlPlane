@@ -1,0 +1,23 @@
+{
+  "moduleId": "tenant-health-check",
+  "moduleVersion": "0.1.0",
+  "tenantContext": {
+    "clientId": "client-contoso",
+    "tenantId": "11111111-1111-1111-1111-111111111111",
+    "tenantName": "Contoso"
+  },
+  "targetScope": {
+    "type": "Users",
+    "mode": "Selected",
+    "targets": [
+      {
+        "id": "alex.example@contoso.com",
+        "displayName": "Alex Example",
+        "userPrincipalName": "alex.example@contoso.com"
+      }
+    ]
+  },
+  "parameters": {
+    "includeUsers": true
+  }
+}

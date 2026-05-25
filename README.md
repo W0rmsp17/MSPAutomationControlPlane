@@ -124,4 +124,4 @@ The health check module should come first because it proves the control plane ca
 
 This repository is currently documentation-first. Implementation should start after the architecture and module contract are agreed.
 
-The first implementation step is replacing the transitional ASP.NET Core scaffold with a .NET isolated Azure Functions project.
+The transitional ASP.NET Core scaffold has been replaced with a .NET isolated Azure Functions project for the local MVP controller.
