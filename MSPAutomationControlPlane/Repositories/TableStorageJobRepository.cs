@@ -17,6 +17,14 @@ public sealed class TableStorageJobRepository(TableStorageOptions options) : IJo
         return _store.GetAsync(PartitionKey, id, cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<JobRecord>> ListAsync(CancellationToken cancellationToken)
+    {
+        var jobs = await _store.ListPartitionAsync(PartitionKey, cancellationToken);
+        return jobs
+            .OrderByDescending(job => job.CreatedAt)
+            .ToArray();
+    }
+
     public Task UpdateAsync(JobRecord job, CancellationToken cancellationToken)
     {
         return _store.UpsertAsync(PartitionKey, job.Id, job, cancellationToken);

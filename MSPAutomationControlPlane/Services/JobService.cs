@@ -113,4 +113,9 @@ public sealed class JobService(
     {
         return jobRepository.GetAsync(id, cancellationToken);
     }
+
+    public Task<IReadOnlyCollection<JobRecord>> ListAsync(CancellationToken cancellationToken)
+    {
+        return jobRepository.ListAsync(cancellationToken);
+    }
 }

@@ -9,6 +9,15 @@ namespace MSPAutomationControlPlane.Functions;
 
 public sealed class JobFunctions(JobService jobService)
 {
+    [Function("ListJobs")]
+    public async Task<HttpResponseData> ListJobs(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "jobs")] HttpRequestData request,
+        CancellationToken cancellationToken)
+    {
+        var jobs = await jobService.ListAsync(cancellationToken);
+        return await request.WriteJsonAsync(HttpStatusCode.OK, jobs);
+    }
+
     [Function("SubmitJob")]
     public async Task<HttpResponseData> SubmitJob(
         [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "jobs")] HttpRequestData request,

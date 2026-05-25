@@ -6,6 +6,7 @@ const state = {
   msalAccount: null,
   clients: [],
   modules: [],
+  jobs: [],
   notifications: [],
   auditEvents: []
 };
@@ -272,7 +273,7 @@ function render() {
   el("metric-clients").textContent = state.clients.length;
   el("metric-modules").textContent = state.modules.length;
   el("metric-notifications").textContent = state.notifications.length;
-  el("metric-audit").textContent = state.auditEvents.length;
+  el("metric-audit").textContent = state.jobs.length;
 
   renderList("clients-list", state.clients, (client) =>
     listItem(
@@ -288,6 +289,19 @@ function render() {
   renderList("notifications-list", state.notifications, (subscription) =>
     listItem(subscription.displayName || subscription.id, subscription.targetUrl || "", subscription.enabled ? "Enabled" : "Disabled"));
 
+  renderList("jobs-list", state.jobs, (job) => {
+    const item = listItem(
+      job.id,
+      `${job.moduleId || ""} - ${job.tenantContext?.tenantName || job.tenantContext?.clientId || ""} - ${job.createdAt || ""}`,
+      job.status || "Unknown");
+
+    item.addEventListener("click", () => {
+      el("job-id").value = job.id;
+      el("job-output").textContent = pretty(job);
+    });
+    return item;
+  });
+
   renderTimeline("audit-list", state.auditEvents);
   renderTimeline("recent-activity", state.auditEvents);
 }
@@ -298,15 +312,17 @@ async function refreshAll() {
     await api("health");
     setHealth("Healthy", "ok");
 
-    const [clients, modules, notifications, auditEvents] = await Promise.all([
+    const [clients, modules, jobs, notifications, auditEvents] = await Promise.all([
       api("client-connections"),
       api("modules"),
+      api("jobs"),
       api("notification-subscriptions"),
       api("audit-events")
     ]);
 
     state.clients = clients;
     state.modules = modules;
+    state.jobs = jobs;
     state.notifications = notifications;
     state.auditEvents = auditEvents;
     render();

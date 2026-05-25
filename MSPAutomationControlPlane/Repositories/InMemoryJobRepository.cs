@@ -19,6 +19,15 @@ public sealed class InMemoryJobRepository : IJobRepository
         return Task.FromResult(job);
     }
 
+    public Task<IReadOnlyCollection<JobRecord>> ListAsync(CancellationToken cancellationToken)
+    {
+        IReadOnlyCollection<JobRecord> jobs = _jobs.Values
+            .OrderByDescending(job => job.CreatedAt)
+            .ToArray();
+
+        return Task.FromResult(jobs);
+    }
+
     public Task UpdateAsync(JobRecord job, CancellationToken cancellationToken)
     {
         _jobs[job.Id] = job;

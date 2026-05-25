@@ -81,6 +81,7 @@ POST /api/notification-subscriptions
 GET  /api/notification-subscriptions
 DELETE /api/notification-subscriptions/{id}
 POST /api/jobs
+GET  /api/jobs
 GET  /api/jobs/{id}
 GET  /api/local/job-queue
 POST /api/local/dispatch-next
@@ -132,6 +133,12 @@ Read job status:
 
 ```powershell
 Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}' -Method Get
+```
+
+List recent jobs:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs' -Method Get
 ```
 
 List audit events:

@@ -159,6 +159,7 @@ This repository now has a deployable MVP foundation:
 
 - .NET 8 isolated Azure Functions control API.
 - HTTP functions for health, modules, client connections, notification subscriptions, jobs, and audit.
+- Recent job catalog and job event history in the management UI.
 - Service Bus-triggered simulated dispatch flow.
 - Table Storage persistence provider.
 - Terraform deployment for the central MSP control plane.
