@@ -24,5 +24,5 @@ public sealed class JobRecord
 
     public DateTimeOffset UpdatedAt { get; set; }
 
-    public List<JobEvent> Events { get; } = [];
+    public List<JobEvent> Events { get; init; } = [];
 }

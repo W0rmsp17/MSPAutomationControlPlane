@@ -78,10 +78,27 @@ The intended flow is:
 - Pre-discovery script for tenant, subscription, account, and region defaults.
 - Optional bootstrap script for privileged setup.
 - Deployment script for Terraform.
+- Function App deployment script for the control API runtime.
 - Post-deployment script for generated URLs and runtime settings.
 - Optional teardown script for lab environments.
 
 The first Terraform deployment target is the central MSP environment. Client tenants are registered later as `ClientConnection` records rather than receiving their own management plane deployment.
+
+### Deployment Commands
+
+Create an environment-specific `terraform.tfvars` file from the relevant example under `infra/environments/<environment>`, then run:
+
+```powershell
+.\scripts\deploy.ps1 -Environment cholbing-dev -Apply -AutoApprove
+.\scripts\deploy-function.ps1
+.\scripts\post-deploy.ps1
+```
+
+If Container Apps is used for worker execution, the Azure subscription must have the `Microsoft.App` resource provider registered:
+
+```powershell
+az provider register --namespace Microsoft.App
+```
 
 ## Core Concepts
 
@@ -128,6 +145,13 @@ The health check module should come first because it proves the control plane ca
 
 ## Repository Status
 
-This repository is currently documentation-first. Implementation should start after the architecture and module contract are agreed.
+This repository now has a deployable MVP foundation:
 
-The transitional ASP.NET Core scaffold has been replaced with a .NET isolated Azure Functions project for the local MVP controller.
+- .NET 8 isolated Azure Functions control API.
+- HTTP functions for health, modules, client connections, notification subscriptions, jobs, and audit.
+- Service Bus-triggered simulated dispatch flow.
+- Table Storage persistence provider.
+- Terraform deployment for the central MSP control plane.
+- PowerShell scripts for pre-discovery, Terraform deployment, Function App zip deployment, and post-deployment outputs.
+
+The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.

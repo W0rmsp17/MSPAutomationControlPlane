@@ -30,8 +30,11 @@ bootstrap.ps1
 deploy.ps1
   -> Terraform init/validate/plan/apply.
 
+deploy-function.ps1
+  -> Publish and zip-deploy the .NET isolated Azure Functions control API.
+
 post-deploy.ps1
-  -> Read Terraform outputs and configure runtime values.
+  -> Read Terraform outputs and print endpoint/runtime values.
 
 teardown.ps1
   -> Optional cleanup for lab environments.
@@ -53,6 +56,8 @@ Terraform should deploy:
 - Static Web App or frontend hosting.
 - Container Apps Environment.
 - Managed identities and RBAC assignments.
+
+Subscriptions using Container Apps must have the `Microsoft.App` resource provider registered before the Container Apps Environment can be created.
 
 ## Configurable Inputs
 
@@ -94,3 +99,5 @@ Post-deployment should read Terraform outputs and update runtime settings such a
 - Allowed module registry configuration.
 
 Post-deployment should also print a concise deployment summary for the implementor.
+
+The deployment script supports non-interactive lab deployment through `-Apply -AutoApprove`. Production deployments can omit `-AutoApprove` to keep the Terraform approval prompt.

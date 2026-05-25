@@ -2,7 +2,8 @@
 param(
     [string]$Environment = "cholbing-dev",
     [string]$TerraformPath = "terraform",
-    [switch]$Apply
+    [switch]$Apply,
+    [switch]$AutoApprove
 )
 
 $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
@@ -32,7 +33,12 @@ try {
     Invoke-Terraform -Arguments @("validate")
 
     if ($Apply) {
-        Invoke-Terraform -Arguments @("apply", "-var-file=$tfvarsPath")
+        $applyArguments = @("apply", "-var-file=$tfvarsPath")
+        if ($AutoApprove) {
+            $applyArguments += "-auto-approve"
+        }
+
+        Invoke-Terraform -Arguments $applyArguments
     }
     else {
         Invoke-Terraform -Arguments @("plan", "-var-file=$tfvarsPath")

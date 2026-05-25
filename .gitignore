@@ -381,4 +381,5 @@ local.settings.json
 
 # Build and package artifacts
 dist/
+.deploy/
 *.zip
