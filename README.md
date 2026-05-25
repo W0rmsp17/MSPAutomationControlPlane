@@ -4,6 +4,8 @@ A lightweight Azure control plane for running repeatable MSP automation modules 
 
 The goal is to provide a portable, low-cost, API-driven platform where automation "snap-ins" can be added without rebuilding the core application. Each snap-in should declare what it needs, accept a standard job payload, run in an isolated worker, and return structured results that the control plane can audit and display.
 
+This repository focuses on the control plane itself: deployment, API, orchestration, tenant/client registry, target scoping, identity/secret brokering, queueing, audit, and module registration. Business-specific automation modules can be built as separate projects that plug into the platform contract.
+
 ## Problem Statement
 
 MSPs often build useful automations, but they become hard to reuse because each script has its own setup, credentials, inputs, logging, and execution pattern. This project aims to standardise the surrounding platform:
@@ -14,6 +16,22 @@ MSPs often build useful automations, but they become hard to reuse because each 
 - Store run history, outputs, and audit events.
 - Keep secrets in Key Vault rather than inside scripts or app settings.
 - Allow modules to be replaced or extended without changing the control plane.
+- Let module authors focus on business logic instead of rebuilding tenant pickers, approval flows, job tracking, secret handling, and audit logging.
+
+## Product Boundary
+
+This project should produce a reusable deployment package that others can configure for their own region, tenant, subscription, naming rules, and module sources.
+
+The control plane provides:
+
+- Deployable Azure infrastructure.
+- API surface for tenants, modules, jobs, scopes, approvals, and results.
+- Standard app container registration contract.
+- Standard job input and output contract.
+- Shared operator interface.
+- Shared security, audit, and observability.
+
+The control plane does not provide every automation. Instead, it provides the platform that makes automations easy to snap in.
 
 ## Initial Direction
 
@@ -39,6 +57,9 @@ Represents a managed customer or internal environment. Stores non-secret metadat
 Automation module:
 A reusable snap-in that declares its metadata, required permissions, parameters, image, timeout, and output schema.
 
+Target scope:
+The object set a job runs against. A module can support tenant-wide execution, selected users, multiple users, groups, devices, subscriptions, resource groups, or custom object lists.
+
 Job:
 A requested execution of a module against a client tenant. Jobs are submitted through the API, queued, executed by a worker, and recorded in run history.
 
@@ -53,7 +74,9 @@ Optional workflow step for high-risk modules. Some modules may run immediately; 
 - The control plane owns scheduling, state, security, audit, and visibility.
 - Snap-ins own their specific automation logic.
 - Snap-ins communicate through a versioned contract, not bespoke control plane APIs.
+- Snap-ins bring business logic; the control plane provides common platform services.
 - Secrets are referenced, not embedded in job payloads.
+- Target scope is first-class in every job request.
 - Long-running or dependency-heavy work runs in containers, not HTTP request handlers.
 - Tenant boundaries should be explicit and visible in every job request.
 - The first version should be simple enough to deploy, demo, and reason about.
@@ -72,4 +95,3 @@ The health check module should come first because it proves the control plane ca
 ## Repository Status
 
 This repository is currently documentation-first. Implementation should start after the architecture and module contract are agreed.
-

@@ -5,7 +5,8 @@
 ```text
 Admin UI
   -> Control Plane API
-  -> Job validation and persistence
+  -> Tenant, module, parameter, and scope validation
+  -> Job persistence and audit event
   -> Service Bus queue
   -> Container Apps Job worker
   -> Snap-in module
@@ -21,6 +22,7 @@ The frontend gives operators a simple way to:
 
 - View registered client tenants.
 - Browse enabled automation modules.
+- Choose a supported target scope, such as tenant, users, groups, devices, subscriptions, or resource groups.
 - Submit module jobs.
 - Review job status and output.
 - View audit history.
@@ -36,12 +38,31 @@ Azure Functions should host the API. It is responsible for:
 - Module registration and discovery.
 - Job submission.
 - Parameter validation.
+- Target scope validation.
+- Identity and secret reference brokering.
+- Permission requirement checks.
 - Writing job state.
 - Queueing work.
 - Receiving worker callbacks.
 - Exposing run history.
 
 The API should not run long automation tasks directly.
+
+### Control Services
+
+The control plane should provide shared services that snap-ins can consume through the module and job contracts:
+
+- Tenant selection.
+- Target scope selection.
+- Parameter form generation from module schemas.
+- Secret reference resolution.
+- Permission declaration and readiness checks.
+- Approval policy.
+- Job lifecycle management.
+- Output storage and presentation.
+- Audit history.
+
+These services are the main reason for the platform. A snap-in should bring business logic, while the control plane handles the operational wrapper around it.
 
 ### Queue
 
@@ -110,10 +131,26 @@ The control plane should not need custom code for every module. A module is snap
 - A module manifest.
 - A container image.
 - A parameter schema.
+- Supported target scopes.
 - A declared permissions model.
 - A declared output schema.
 
 The module receives a standard job input and returns a standard output. This keeps the control plane reusable.
+
+## Deployment Package
+
+This project should be deployable as a reusable package. Implementors should be able to configure:
+
+- Azure region.
+- Environment name.
+- Resource naming prefix.
+- Target subscription.
+- Admin/operator group.
+- Allowed module registries.
+- Storage and queue options.
+- Whether sample modules are deployed.
+
+The deployment should not contain tenant-specific hard-coding. Demo modules may exist, but real automation modules should be optional snap-ins.
 
 ## Security Model
 
@@ -141,4 +178,3 @@ The first implementation should prove the platform loop:
 7. Display status and history.
 
 Advanced scheduling, multi-region execution, marketplace-style module publishing, and complex approval chains should come later.
-

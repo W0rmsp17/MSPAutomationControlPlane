@@ -18,6 +18,10 @@ Each module should publish a manifest similar to this:
   "timeoutSeconds": 900,
   "concurrency": 1,
   "approvalRequired": false,
+  "supportedScopes": [
+    "Tenant",
+    "Users"
+  ],
   "parametersSchema": {
     "type": "object",
     "properties": {
@@ -63,6 +67,17 @@ The control plane should pass a standard input document to the module.
     "tenantId": "11111111-1111-1111-1111-111111111111",
     "tenantName": "Contoso"
   },
+  "targetScope": {
+    "type": "Users",
+    "mode": "Selected",
+    "targets": [
+      {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "displayName": "Alex Example",
+        "upn": "alex.example@contoso.com"
+      }
+    ]
+  },
   "parameters": {
     "includeUsers": false
   },
@@ -77,6 +92,28 @@ The control plane should pass a standard input document to the module.
 ```
 
 Secrets should be references. The worker or control plane identity should resolve them through Key Vault permissions.
+
+## Target Scopes
+
+Target scope is a first-class part of the contract. It tells the module what object set it is expected to work against.
+
+Initial scope types:
+
+- `Tenant`
+- `Users`
+- `Groups`
+- `Devices`
+- `Subscriptions`
+- `ResourceGroups`
+- `Custom`
+
+Initial scope modes:
+
+- `All`
+- `Selected`
+- `Filtered`
+
+The control plane should validate that a submitted job uses a scope supported by the module manifest.
 
 ## Runtime Environment
 
@@ -151,4 +188,3 @@ Rules:
 - Module IDs should remain stable.
 - Breaking parameter changes should increment the module major version.
 - The control plane should keep a record of the manifest version used for each job.
-

@@ -4,6 +4,7 @@
 
 - Confirm architecture direction.
 - Confirm module contract.
+- Confirm control plane service boundary.
 - Create project folder and initial docs.
 - Add `.gitignore`.
 - Decide whether this becomes its own GitHub repository.
@@ -14,6 +15,7 @@
 - Add health endpoint.
 - Add client tenant model.
 - Add module registry model.
+- Add supported target scope model.
 - Add job submission endpoint.
 - Add job status endpoint.
 - Add Table Storage repositories.
@@ -24,6 +26,7 @@
 - Add a development worker that can process queued jobs locally.
 - Add a simple health-check module.
 - Prove the job input and output contract.
+- Prove tenant-scope and user-scope execution payloads.
 - Store run history and job events.
 
 ## Phase 4: Container Apps Job Execution
@@ -55,6 +58,7 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 
 - Add client list.
 - Add module catalog.
+- Add target scope selector.
 - Add job submission form generated from module parameter schema.
 - Add job history.
 - Add job result view.
@@ -72,6 +76,7 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 - Log Analytics workspace.
 - Container Apps Environment.
 - Container registry or GitHub Container Registry integration.
+- Configurable region, naming prefix, environment, and module source inputs.
 
 ## Phase 8: Hardening
 
@@ -82,4 +87,3 @@ This lines up well with AZ-305 because it touches governance, cost, monitoring, 
 - Add deployment guide.
 - Add sample tenant/client onboarding guide.
 - Add threat model notes.
-
