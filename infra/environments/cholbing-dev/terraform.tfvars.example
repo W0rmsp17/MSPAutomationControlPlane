@@ -1,0 +1,12 @@
+subscription_id  = "00000000-0000-0000-0000-000000000000"
+msp_tenant_id    = "00000000-0000-0000-0000-000000000000"
+name_prefix      = "chdcp"
+environment_name = "dev"
+location         = "australiaeast"
+
+tags = {
+  project            = "msp-automation-control-plane"
+  owner              = "cholbing"
+  msp_tenant         = "CholbingDevoutlook"
+  client_test_tenant = "plutonix"
+}

@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Environment = "plutonix-dev",
+    [string]$Environment = "cholbing-dev",
     [string]$TerraformPath = "terraform",
     [switch]$Apply
 )
@@ -14,16 +14,28 @@ if (-not (Test-Path $tfvarsPath)) {
     throw "Missing tfvars file: $tfvarsPath. Copy terraform.tfvars.example to terraform.tfvars and set the MSP subscription and tenant values."
 }
 
+function Invoke-Terraform {
+    param(
+        [Parameter(Mandatory)]
+        [string[]]$Arguments
+    )
+
+    & $TerraformPath @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "Terraform command failed: $TerraformPath $($Arguments -join ' ')"
+    }
+}
+
 Push-Location $infraRoot
 try {
-    & $TerraformPath init
-    & $TerraformPath validate
+    Invoke-Terraform -Arguments @("init")
+    Invoke-Terraform -Arguments @("validate")
 
     if ($Apply) {
-        & $TerraformPath apply -var-file="$tfvarsPath"
+        Invoke-Terraform -Arguments @("apply", "-var-file=$tfvarsPath")
     }
     else {
-        & $TerraformPath plan -var-file="$tfvarsPath"
+        Invoke-Terraform -Arguments @("plan", "-var-file=$tfvarsPath")
     }
 }
 finally {
