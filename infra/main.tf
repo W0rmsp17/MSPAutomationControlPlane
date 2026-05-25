@@ -156,6 +156,15 @@ resource "azurerm_windows_function_app" "control_api" {
     application_insights_connection_string = azurerm_application_insights.main.connection_string
     ftps_state                             = "Disabled"
     minimum_tls_version                    = "1.2"
+
+    cors {
+      allowed_origins = concat(
+        [
+          "https://${azurerm_static_web_app.frontend.default_host_name}"
+        ],
+        var.function_cors_allowed_origins
+      )
+    }
   }
 
   app_settings = {

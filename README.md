@@ -91,6 +91,7 @@ Create an environment-specific `terraform.tfvars` file from the relevant example
 ```powershell
 .\scripts\deploy.ps1 -Environment cholbing-dev -Apply -AutoApprove
 .\scripts\deploy-function.ps1
+.\scripts\deploy-frontend.ps1
 .\scripts\post-deploy.ps1
 ```
 
@@ -152,6 +153,7 @@ This repository now has a deployable MVP foundation:
 - Service Bus-triggered simulated dispatch flow.
 - Table Storage persistence provider.
 - Terraform deployment for the central MSP control plane.
-- PowerShell scripts for pre-discovery, Terraform deployment, Function App zip deployment, and post-deployment outputs.
+- Static management UI hosted on Azure Static Web Apps.
+- PowerShell scripts for pre-discovery, Terraform deployment, Function App zip deployment, Static Web App deployment, and post-deployment outputs.
 
 The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>MSP Automation Control Plane</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <div class="brand-mark">CP</div>
+          <div>
+            <div class="brand-title">Control Plane</div>
+            <div class="brand-subtitle">MSP automation</div>
+          </div>
+        </div>
+        <nav class="nav" aria-label="Main navigation">
+          <button class="nav-item active" data-view="overview">Overview</button>
+          <button class="nav-item" data-view="clients">Clients</button>
+          <button class="nav-item" data-view="modules">Modules</button>
+          <button class="nav-item" data-view="jobs">Jobs</button>
+          <button class="nav-item" data-view="notifications">Notifications</button>
+          <button class="nav-item" data-view="audit">Audit</button>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Central MSP plane</p>
+            <h1 id="view-title">Overview</h1>
+          </div>
+          <div class="topbar-actions">
+            <span id="health-pill" class="pill muted">Checking</span>
+            <button id="refresh-button" class="button secondary" type="button">Refresh</button>
+            <button id="settings-button" class="button icon-button" type="button" aria-label="Settings">Settings</button>
+          </div>
+        </header>
+
+        <section id="settings-panel" class="settings-panel hidden" aria-label="API settings">
+          <label for="api-base-url">API base URL</label>
+          <div class="inline-form">
+            <input id="api-base-url" type="url" placeholder="https://func-example.azurewebsites.net/api">
+            <button id="save-settings-button" class="button primary" type="button">Save</button>
+          </div>
+        </section>
+
+        <section id="status-message" class="status-message hidden" role="status"></section>
+
+        <section id="overview" class="view active-view">
+          <div class="metric-grid">
+            <article class="metric">
+              <span>Clients</span>
+              <strong id="metric-clients">0</strong>
+            </article>
+            <article class="metric">
+              <span>Modules</span>
+              <strong id="metric-modules">0</strong>
+            </article>
+            <article class="metric">
+              <span>Notifications</span>
+              <strong id="metric-notifications">0</strong>
+            </article>
+            <article class="metric">
+              <span>Recent audit</span>
+              <strong id="metric-audit">0</strong>
+            </article>
+          </div>
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Recent Activity</h2>
+            </div>
+            <div id="recent-activity" class="timeline"></div>
+          </div>
+        </section>
+
+        <section id="clients" class="view">
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Client Connections</h2>
+              </div>
+              <div id="clients-list" class="list"></div>
+            </div>
+            <form id="client-form" class="panel form-panel">
+              <div class="panel-header">
+                <h2>Register Client</h2>
+              </div>
+              <label for="client-json">Connection JSON</label>
+              <textarea id="client-json" spellcheck="false"></textarea>
+              <button class="button primary" type="submit">Register client</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="modules" class="view">
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Registered Modules</h2>
+              </div>
+              <div id="modules-list" class="list"></div>
+            </div>
+            <form id="module-form" class="panel form-panel">
+              <div class="panel-header">
+                <h2>Add Module</h2>
+              </div>
+              <label for="module-json">Manifest JSON</label>
+              <textarea id="module-json" spellcheck="false"></textarea>
+              <button class="button primary" type="submit">Register module</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="jobs" class="view">
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Job Lookup</h2>
+              </div>
+              <div class="inline-form">
+                <input id="job-id" type="text" placeholder="job-...">
+                <button id="load-job-button" class="button secondary" type="button">Load</button>
+              </div>
+              <pre id="job-output" class="json-output"></pre>
+            </div>
+            <form id="job-form" class="panel form-panel">
+              <div class="panel-header">
+                <h2>Submit Job</h2>
+              </div>
+              <label for="job-json">Job request JSON</label>
+              <textarea id="job-json" spellcheck="false"></textarea>
+              <button class="button primary" type="submit">Submit job</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="notifications" class="view">
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Notification Hooks</h2>
+              </div>
+              <div id="notifications-list" class="list"></div>
+            </div>
+            <form id="notification-form" class="panel form-panel">
+              <div class="panel-header">
+                <h2>Add Hook</h2>
+              </div>
+              <label for="notification-json">Subscription JSON</label>
+              <textarea id="notification-json" spellcheck="false"></textarea>
+              <button class="button primary" type="submit">Register hook</button>
+            </form>
+          </div>
+        </section>
+
+        <section id="audit" class="view">
+          <div class="panel">
+            <div class="panel-header">
+              <h2>Audit Events</h2>
+            </div>
+            <div id="audit-list" class="timeline"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app-config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

@@ -56,6 +56,12 @@ variable "function_plan_sku" {
   default     = "Y1"
 }
 
+variable "function_cors_allowed_origins" {
+  description = "Additional origins allowed to call the Function App API from browsers."
+  type        = list(string)
+  default     = []
+}
+
 variable "table_prefix" {
   description = "Azure Table Storage table name prefix."
   type        = string

@@ -33,6 +33,9 @@ deploy.ps1
 deploy-function.ps1
   -> Publish and zip-deploy the .NET isolated Azure Functions control API.
 
+deploy-frontend.ps1
+  -> Inject the API base URL and deploy the static management UI to Azure Static Web Apps.
+
 post-deploy.ps1
   -> Read Terraform outputs and print endpoint/runtime values.
 

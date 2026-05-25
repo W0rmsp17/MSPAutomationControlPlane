@@ -1,0 +1,350 @@
+const config = window.MSP_CONTROL_PLANE_CONFIG || {};
+const state = {
+  apiBaseUrl: localStorage.getItem("apiBaseUrl") || config.apiBaseUrl || "",
+  clients: [],
+  modules: [],
+  notifications: [],
+  auditEvents: []
+};
+
+const samples = {
+  client: {
+    id: "client-plutonix",
+    displayName: "Plutonix",
+    tenantId: "00000000-0000-0000-0000-000000000000",
+    executionMode: "Central",
+    executionAppClientId: "00000000-0000-0000-0000-000000000000",
+    certificateReference: "kv://clients/client-plutonix/graph-certificate",
+    enabledModuleIds: ["tenant-health-check"],
+    allowedScopes: ["Tenant", "Users"],
+    enabled: true
+  },
+  module: {
+    schemaVersion: "1.0",
+    id: "tenant-health-check",
+    name: "Tenant Health Check",
+    version: "0.1.0",
+    description: "Validates the control plane module registration and job contract.",
+    image: "ghcr.io/example/tenant-health-check:0.1.0",
+    runtime: "container-apps-job",
+    timeoutSeconds: 900,
+    concurrency: 1,
+    approvalRequired: false,
+    supportedScopes: ["Tenant", "Users"],
+    parametersSchema: {
+      type: "object",
+      properties: {
+        includeUsers: {
+          type: "boolean",
+          default: false
+        }
+      },
+      required: []
+    },
+    requiredPermissions: [
+      {
+        provider: "MicrosoftGraph",
+        permission: "Organization.Read.All",
+        type: "Application"
+      }
+    ],
+    outputsSchema: {
+      type: "object",
+      required: ["status", "summary", "findings"]
+    }
+  },
+  notification: {
+    id: "teams-ops-channel",
+    displayName: "Teams Ops Channel",
+    targetUrl: "https://example.invalid/webhook",
+    eventTypes: ["JobSubmitted", "JobCompleted", "JobFailed"],
+    enabled: true
+  }
+};
+
+samples.job = {
+  moduleId: samples.module.id,
+  moduleVersion: samples.module.version,
+  clientConnectionId: samples.client.id,
+  targetScope: {
+    type: "Users",
+    mode: "Selected",
+    targets: [
+      {
+        id: "alex.example@contoso.com",
+        displayName: "Alex Example",
+        userPrincipalName: "alex.example@contoso.com"
+      }
+    ]
+  },
+  parameters: {
+    includeUsers: true
+  }
+};
+
+const el = (id) => document.getElementById(id);
+
+function pretty(value) {
+  return JSON.stringify(value, null, 2);
+}
+
+function endpoint(path) {
+  return `${state.apiBaseUrl.replace(/\/$/, "")}/${path.replace(/^\//, "")}`;
+}
+
+async function api(path, options = {}) {
+  if (!state.apiBaseUrl) {
+    throw new Error("Set the API base URL before calling the control plane.");
+  }
+
+  const response = await fetch(endpoint(path), {
+    ...options,
+    headers: {
+      "content-type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(text || `${response.status} ${response.statusText}`);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+}
+
+function setMessage(message, type = "ok") {
+  const node = el("status-message");
+  node.textContent = message;
+  node.className = `status-message ${type}`;
+  window.clearTimeout(setMessage.timeout);
+  setMessage.timeout = window.setTimeout(() => node.classList.add("hidden"), 6500);
+}
+
+function setHealth(status, className) {
+  const pill = el("health-pill");
+  pill.textContent = status;
+  pill.className = `pill ${className}`;
+}
+
+function renderList(targetId, items, renderer) {
+  const target = el(targetId);
+  target.innerHTML = "";
+  if (!items.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = "No records found.";
+    target.appendChild(empty);
+    return;
+  }
+
+  items.forEach((item) => target.appendChild(renderer(item)));
+}
+
+function listItem(title, meta, pillText) {
+  const item = document.createElement("article");
+  item.className = "list-item";
+
+  const header = document.createElement("div");
+  header.className = "list-item-header";
+
+  const strong = document.createElement("strong");
+  strong.textContent = title;
+  header.appendChild(strong);
+
+  if (pillText) {
+    const pill = document.createElement("span");
+    pill.className = "pill muted";
+    pill.textContent = pillText;
+    header.appendChild(pill);
+  }
+
+  const metaNode = document.createElement("div");
+  metaNode.className = "meta";
+  metaNode.textContent = meta;
+
+  item.appendChild(header);
+  item.appendChild(metaNode);
+  return item;
+}
+
+function renderTimeline(targetId, events) {
+  const sorted = [...events].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)));
+  renderList(targetId, sorted.slice(0, 25), (event) => {
+    const item = document.createElement("article");
+    item.className = "timeline-item";
+
+    const title = document.createElement("strong");
+    title.textContent = event.eventType || "Event";
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = `${event.occurredAt || ""} - ${event.actor || "system"}`;
+
+    const message = document.createElement("div");
+    message.textContent = event.message || "";
+
+    item.appendChild(title);
+    item.appendChild(meta);
+    item.appendChild(message);
+    return item;
+  });
+}
+
+function render() {
+  el("metric-clients").textContent = state.clients.length;
+  el("metric-modules").textContent = state.modules.length;
+  el("metric-notifications").textContent = state.notifications.length;
+  el("metric-audit").textContent = state.auditEvents.length;
+
+  renderList("clients-list", state.clients, (client) =>
+    listItem(client.displayName || client.id, `${client.tenantId || ""} - ${client.executionMode || ""}`, client.enabled ? "Enabled" : "Disabled"));
+
+  renderList("modules-list", state.modules, (module) => {
+    const manifest = module.manifest || module;
+    return listItem(manifest.name || manifest.id, `${manifest.id || ""} - ${manifest.version || ""}`, manifest.runtime || "module");
+  });
+
+  renderList("notifications-list", state.notifications, (subscription) =>
+    listItem(subscription.displayName || subscription.id, subscription.targetUrl || "", subscription.enabled ? "Enabled" : "Disabled"));
+
+  renderTimeline("audit-list", state.auditEvents);
+  renderTimeline("recent-activity", state.auditEvents);
+}
+
+async function refreshAll() {
+  try {
+    setHealth("Checking", "muted");
+    await api("health");
+    setHealth("Healthy", "ok");
+
+    const [clients, modules, notifications, auditEvents] = await Promise.all([
+      api("client-connections"),
+      api("modules"),
+      api("notification-subscriptions"),
+      api("audit-events")
+    ]);
+
+    state.clients = clients;
+    state.modules = modules;
+    state.notifications = notifications;
+    state.auditEvents = auditEvents;
+    render();
+  } catch (error) {
+    setHealth("Attention", "warn");
+    setMessage(error.message, "warn");
+  }
+}
+
+async function submitJsonForm(textareaId, path) {
+  const payload = JSON.parse(el(textareaId).value);
+  const result = await api(path, {
+    method: "POST",
+    body: JSON.stringify(payload)
+  });
+  await refreshAll();
+  return result;
+}
+
+function wireNavigation() {
+  document.querySelectorAll(".nav-item").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll(".nav-item").forEach((item) => item.classList.remove("active"));
+      document.querySelectorAll(".view").forEach((view) => view.classList.remove("active-view"));
+      button.classList.add("active");
+      el(button.dataset.view).classList.add("active-view");
+      el("view-title").textContent = button.textContent;
+    });
+  });
+}
+
+function wireForms() {
+  el("client-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await submitJsonForm("client-json", "client-connections");
+      setMessage("Client connection registered.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("module-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await submitJsonForm("module-json", "modules");
+      setMessage("Module registered.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("notification-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await submitJsonForm("notification-json", "notification-subscriptions");
+      setMessage("Notification hook registered.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("job-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      const result = await submitJsonForm("job-json", "jobs");
+      el("job-id").value = result.id;
+      el("job-output").textContent = pretty(result);
+      setMessage("Job submitted.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("load-job-button").addEventListener("click", async () => {
+    try {
+      const job = await api(`jobs/${encodeURIComponent(el("job-id").value.trim())}`);
+      el("job-output").textContent = pretty(job);
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+}
+
+function wireSettings() {
+  el("api-base-url").value = state.apiBaseUrl;
+  el("settings-button").addEventListener("click", () => {
+    el("settings-panel").classList.toggle("hidden");
+  });
+  el("save-settings-button").addEventListener("click", async () => {
+    state.apiBaseUrl = el("api-base-url").value.trim();
+    localStorage.setItem("apiBaseUrl", state.apiBaseUrl);
+    setMessage("API base URL saved.");
+    await refreshAll();
+  });
+  el("refresh-button").addEventListener("click", refreshAll);
+}
+
+function seedTextareas() {
+  el("client-json").value = pretty(samples.client);
+  el("module-json").value = pretty(samples.module);
+  el("job-json").value = pretty(samples.job);
+  el("notification-json").value = pretty(samples.notification);
+}
+
+wireNavigation();
+wireSettings();
+wireForms();
+seedTextareas();
+render();
+
+if (state.apiBaseUrl) {
+  refreshAll();
+} else {
+  el("settings-panel").classList.remove("hidden");
+  setHealth("Configure", "warn");
+}
