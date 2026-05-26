@@ -185,10 +185,13 @@ This repository now has a deployable MVP foundation:
 
 The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.
 
+The current cloud smoke test validates the protected API, Service Bus dispatch, Container Apps Job execution, blob result handoff, and result collection path. See [Cloud smoke test](docs/cloud-smoke-test.md).
+
 ## Further Reading
 
 - [Architecture](docs/architecture.md)
 - [Deployment model](docs/deployment-model.md)
 - [Module contract](docs/module-contract.md)
 - [Module CI/CD model](docs/module-ci-cd.md)
+- [Cloud smoke test](docs/cloud-smoke-test.md)
 - [Architecture risk register](docs/risk-register.md)
