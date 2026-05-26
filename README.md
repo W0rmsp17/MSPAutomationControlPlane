@@ -124,6 +124,12 @@ The first browser launch after enabling the API scope may require a one-time Mic
 .\scripts\ensure-swa-auth-app.ps1 -AllowedGroupIds "<operator-group-object-id>"
 ```
 
+For lab or small MSP environments, the bootstrap script can also create or reuse a named operator group and add the signed-in implementor:
+
+```powershell
+.\scripts\ensure-swa-auth-app.ps1 -CreateOperatorGroup -OperatorGroupDisplayName "MSP Control Plane Operators" -AddSignedInUserToOperatorGroup
+```
+
 ## Core Concepts
 
 Client tenant:

@@ -359,6 +359,31 @@ textarea {
   padding: 12px;
 }
 
+.preview-box {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fbfdff;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.preview-row {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 10px;
+}
+
+.preview-row span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.preview-row strong {
+  overflow-wrap: anywhere;
+}
+
 .result-title {
   align-items: center;
   display: flex;

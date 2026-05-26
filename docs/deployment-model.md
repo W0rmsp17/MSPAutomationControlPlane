@@ -75,6 +75,15 @@ The first operator sign-in after the API scope is created may require Microsoft 
 .\scripts\ensure-swa-auth-app.ps1 -AllowedGroupIds "<operator-group-object-id>"
 ```
 
+For lab deployments or small MSP environments, the script can also create or reuse a named group and add the signed-in implementor:
+
+```powershell
+.\scripts\ensure-swa-auth-app.ps1 `
+  -CreateOperatorGroup `
+  -OperatorGroupDisplayName "MSP Control Plane Operators" `
+  -AddSignedInUserToOperatorGroup
+```
+
 For lab deployments or a single implementor, the default signed-in user object ID is enough.
 
 ## Configurable Inputs

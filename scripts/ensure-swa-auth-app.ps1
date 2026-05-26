@@ -4,6 +4,9 @@ param(
     [string]$DisplayName = "MSP Automation Control Plane - Static Web App",
     [string[]]$AllowedUserObjectIds = @(),
     [string[]]$AllowedGroupIds = @(),
+    [string]$OperatorGroupDisplayName = "",
+    [switch]$CreateOperatorGroup,
+    [switch]$AddSignedInUserToOperatorGroup,
     [int]$SecretYears = 1
 )
 
@@ -104,7 +107,7 @@ Invoke-JsonCommand -Arguments @(
     $redirectUri
 ) | Out-Null
 
-if ($AllowedUserObjectIds.Count -eq 0) {
+if ($AllowedUserObjectIds.Count -eq 0 -and $AllowedGroupIds.Count -eq 0 -and -not $CreateOperatorGroup -and [string]::IsNullOrWhiteSpace($OperatorGroupDisplayName)) {
     $signedInUser = Invoke-JsonCommand -Arguments @(
         "ad",
         "signed-in-user",
@@ -112,6 +115,79 @@ if ($AllowedUserObjectIds.Count -eq 0) {
     )
     $AllowedUserObjectIds = @($signedInUser.id)
 }
+
+if ($CreateOperatorGroup -or -not [string]::IsNullOrWhiteSpace($OperatorGroupDisplayName)) {
+    if ([string]::IsNullOrWhiteSpace($OperatorGroupDisplayName)) {
+        $OperatorGroupDisplayName = "MSP Control Plane Operators"
+    }
+
+    $operatorGroup = Invoke-JsonCommand -Arguments @(
+        "ad",
+        "group",
+        "list",
+        "--display-name",
+        $OperatorGroupDisplayName
+    ) | Select-Object -First 1
+
+    if (-not $operatorGroup) {
+        if (-not $CreateOperatorGroup) {
+            throw "Operator group '$OperatorGroupDisplayName' was not found. Re-run with -CreateOperatorGroup or pass -AllowedGroupIds."
+        }
+
+        $operatorGroup = Invoke-JsonCommand -Arguments @(
+            "ad",
+            "group",
+            "create",
+            "--display-name",
+            $OperatorGroupDisplayName,
+            "--mail-nickname",
+            ($OperatorGroupDisplayName -replace "[^A-Za-z0-9]", "")
+        )
+        Write-Host "Created operator group: $OperatorGroupDisplayName ($($operatorGroup.id))"
+    }
+    else {
+        Write-Host "Using operator group: $OperatorGroupDisplayName ($($operatorGroup.id))"
+    }
+
+    $AllowedGroupIds += $operatorGroup.id
+
+    if ($AddSignedInUserToOperatorGroup) {
+        $signedInUser = Invoke-JsonCommand -Arguments @(
+            "ad",
+            "signed-in-user",
+            "show"
+        )
+
+        $membership = Invoke-JsonCommand -Arguments @(
+            "ad",
+            "group",
+            "member",
+            "check",
+            "--group",
+            $operatorGroup.id,
+            "--member-id",
+            $signedInUser.id
+        )
+
+        if (-not $membership.value) {
+            & az ad group member add `
+                --group $operatorGroup.id `
+                --member-id $signedInUser.id `
+                --output none
+
+            if ($LASTEXITCODE -ne 0) {
+                throw "Failed to add signed-in user to operator group '$OperatorGroupDisplayName'."
+            }
+
+            Write-Host "Added signed-in user to operator group: $OperatorGroupDisplayName"
+        }
+        else {
+            Write-Host "Signed-in user is already a member of operator group: $OperatorGroupDisplayName"
+        }
+    }
+}
+
+$AllowedGroupIds = @($AllowedGroupIds | Where-Object { -not [string]::IsNullOrWhiteSpace($_) } | Select-Object -Unique)
 
 $scope = $app.api.oauth2PermissionScopes | Where-Object { $_.value -eq "access_as_user" } | Select-Object -First 1
 if (-not $scope) {

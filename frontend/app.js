@@ -308,6 +308,45 @@ function renderJobResult(job) {
   target.classList.remove("hidden");
 }
 
+function renderModulePreview() {
+  const target = el("module-preview");
+  target.innerHTML = "";
+
+  let manifest;
+  try {
+    manifest = JSON.parse(el("module-json").value);
+  } catch {
+    target.classList.add("hidden");
+    return;
+  }
+
+  const rows = [
+    ["Module", `${manifest.name || manifest.id || "Unnamed"} (${manifest.id || "no id"})`],
+    ["Version", manifest.version || "Not set"],
+    ["Runtime", manifest.runtime || "Not set"],
+    ["Image", manifest.image || "Not set"],
+    ["Scopes", Array.isArray(manifest.supportedScopes) ? manifest.supportedScopes.join(", ") : "Not set"],
+    ["Approval", manifest.approvalRequired ? "Required" : "Not required"]
+  ];
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "preview-row";
+
+    const labelNode = document.createElement("span");
+    labelNode.textContent = label;
+
+    const valueNode = document.createElement("strong");
+    valueNode.textContent = value;
+
+    row.appendChild(labelNode);
+    row.appendChild(valueNode);
+    target.appendChild(row);
+  });
+
+  target.classList.remove("hidden");
+}
+
 function renderTimeline(targetId, events) {
   const sorted = [...events].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)));
   renderList(targetId, sorted.slice(0, 25), (event) => {
@@ -418,6 +457,8 @@ function wireNavigation() {
 }
 
 function wireForms() {
+  el("module-json").addEventListener("input", renderModulePreview);
+
   el("client-form").addEventListener("submit", async (event) => {
     event.preventDefault();
     try {
@@ -505,6 +546,7 @@ function seedTextareas() {
   el("module-json").value = pretty(samples.module);
   el("job-json").value = pretty(samples.job);
   el("notification-json").value = pretty(samples.notification);
+  renderModulePreview();
 }
 
 wireNavigation();
