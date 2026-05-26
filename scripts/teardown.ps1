@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$Environment = "cholbing-dev",
+    [string]$Environment = "dev",
     [string]$TerraformPath = "terraform",
     [switch]$Destroy,
     [switch]$AutoApprove,

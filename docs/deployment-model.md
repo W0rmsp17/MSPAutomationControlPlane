@@ -127,13 +127,13 @@ The deployment script supports non-interactive lab deployment through `-Apply -A
 The teardown script is intentionally dry-run by default. It runs a Terraform destroy plan and reports the script-managed Static Web App/API auth app registration that would be deleted.
 
 ```powershell
-.\scripts\teardown.ps1 -Environment cholbing-dev
+.\scripts\teardown.ps1 -Environment dev
 ```
 
 To remove the lab deployment:
 
 ```powershell
-.\scripts\teardown.ps1 -Environment cholbing-dev -Destroy -AutoApprove
+.\scripts\teardown.ps1 -Environment dev -Destroy -AutoApprove
 ```
 
 The Entra app registration is not Terraform-managed because it is configured after the Static Web App hostname exists. `teardown.ps1` deletes it by exact client ID when `-AuthAppClientId` is supplied, otherwise by the default display name. If the app registration is shared or manually owned, pass `-KeepAuthApp`.

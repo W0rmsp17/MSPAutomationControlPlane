@@ -156,10 +156,10 @@ Manual/pre-created app registration mode:
 
 ```powershell
 .\scripts\new-client-connection-bootstrap.ps1 `
-  -ClientConnectionId "client-plutonix" `
-  -DisplayName "Plutonix" `
+  -ClientConnectionId "client-contoso" `
+  -DisplayName "Contoso" `
   -TenantId "<target-tenant-id>" `
-  -OutputPath ".\samples\client-connection-plutonix.json"
+  -OutputPath ".\samples\client-connection-contoso.json"
 ```
 
 Automated target app registration mode:
@@ -168,11 +168,11 @@ Automated target app registration mode:
 az login --tenant <target-tenant-id>
 
 .\scripts\new-client-connection-bootstrap.ps1 `
-  -ClientConnectionId "client-plutonix" `
-  -DisplayName "Plutonix" `
+  -ClientConnectionId "client-contoso" `
+  -DisplayName "Contoso" `
   -TenantId "<target-tenant-id>" `
   -CreateAppRegistration `
-  -OutputPath ".\samples\client-connection-plutonix.json"
+  -OutputPath ".\samples\client-connection-contoso.json"
 ```
 
 The automated path creates the target tenant application and service principal metadata only. Certificate credential creation, Key Vault import, and admin consent remain explicit follow-up steps until the production bootstrap pack is expanded.

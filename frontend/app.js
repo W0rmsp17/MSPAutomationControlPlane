@@ -13,12 +13,12 @@ const state = {
 
 const samples = {
   client: {
-    id: "client-plutonix",
-    displayName: "Plutonix",
+    id: "client-contoso",
+    displayName: "Contoso",
     tenantId: "00000000-0000-0000-0000-000000000000",
     executionMode: "Central",
     executionAppClientId: "00000000-0000-0000-0000-000000000000",
-    certificateReference: "kv://clients/client-plutonix/graph-certificate",
+    certificateReference: "kv://clients/client-contoso/graph-certificate",
     servicePrincipalObjectId: "00000000-0000-0000-0000-000000000000",
     readinessStatus: "PendingConsent",
     configuredPermissions: [

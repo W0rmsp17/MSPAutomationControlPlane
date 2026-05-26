@@ -89,7 +89,7 @@ The first Terraform deployment target is the central MSP environment. Client ten
 Create an environment-specific `terraform.tfvars` file from the relevant example under `infra/environments/<environment>`, then run:
 
 ```powershell
-.\scripts\deploy.ps1 -Environment cholbing-dev -Apply -AutoApprove
+.\scripts\deploy.ps1 -Environment dev -Apply -AutoApprove
 .\scripts\ensure-swa-auth-app.ps1
 .\scripts\deploy-function.ps1
 .\scripts\deploy-frontend.ps1
@@ -99,13 +99,13 @@ Create an environment-specific `terraform.tfvars` file from the relevant example
 For lab cleanup, preview teardown first:
 
 ```powershell
-.\scripts\teardown.ps1 -Environment cholbing-dev
+.\scripts\teardown.ps1 -Environment dev
 ```
 
 Then destroy the Terraform-managed resources and the script-managed Static Web App/API auth app registration:
 
 ```powershell
-.\scripts\teardown.ps1 -Environment cholbing-dev -Destroy -AutoApprove
+.\scripts\teardown.ps1 -Environment dev -Destroy -AutoApprove
 ```
 
 Use `-KeepAuthApp` if the Entra app registration is shared or manually managed outside this lab deployment.
