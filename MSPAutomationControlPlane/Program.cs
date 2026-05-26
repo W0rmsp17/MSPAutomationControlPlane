@@ -68,6 +68,7 @@ var host = new HostBuilder()
             {
                 return new ContainerAppsModuleExecutionProvider(
                     ContainerAppsExecutionOptions.FromEnvironment(),
+                    provider.GetRequiredService<ArtifactStorageOptions>(),
                     provider.GetRequiredService<IModuleRepository>(),
                     provider.GetRequiredService<HttpClient>());
             }

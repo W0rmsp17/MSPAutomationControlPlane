@@ -2,7 +2,9 @@
 param(
     [string]$ApiBaseUrl = "http://localhost:7071/api",
     [string]$ImportRequestPath = "samples/import-account-management-report-module.json",
-    [string]$AccessToken = ""
+    [string]$AccessToken = "",
+    [string]$ExpectedModuleId = "msp-account-management-report",
+    [string]$ExpectedModuleVersion = "0.1.2"
 )
 
 $ErrorActionPreference = "Stop"
@@ -53,6 +55,23 @@ catch {
         $errorText = $_.Exception.Message
     }
 
+    if ($_.Exception.Response -and $_.Exception.Response.Content) {
+        $responseBody = $_.Exception.Response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+        if (-not [string]::IsNullOrWhiteSpace($responseBody)) {
+            $errorText = $responseBody
+        }
+    }
+    elseif ($_.Exception.Response -and $_.Exception.Response.GetResponseStream) {
+        $stream = $_.Exception.Response.GetResponseStream()
+        if ($stream) {
+            $reader = [System.IO.StreamReader]::new($stream)
+            $responseBody = $reader.ReadToEnd()
+            if (-not [string]::IsNullOrWhiteSpace($responseBody)) {
+                $errorText = $responseBody
+            }
+        }
+    }
+
     if ($errorText -like "*already registered*") {
         Write-Host "Module already registered; reusing existing record."
     }
@@ -63,12 +82,12 @@ catch {
 
 $modules = Invoke-ControlPlaneApi -Method "Get" -Path "modules"
 $match = $modules | Where-Object {
-    $_.manifest.id -eq "msp-account-management-report" -and
-    $_.manifest.version -eq "0.1.0"
+    $_.manifest.id -eq $ExpectedModuleId -and
+    $_.manifest.version -eq $ExpectedModuleVersion
 } | Select-Object -First 1
 
 if ($null -eq $match) {
     throw "Imported module was not found in module catalog."
 }
 
-Write-Host "Module catalog contains msp-account-management-report 0.1.0." -ForegroundColor Green
+Write-Host "Module catalog contains $ExpectedModuleId $ExpectedModuleVersion." -ForegroundColor Green

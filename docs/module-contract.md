@@ -120,12 +120,16 @@ The worker should provide these environment variables where practical:
 ```text
 CONTROL_PLANE_JOB_ID=job-20260525-000001
 CONTROL_PLANE_MODULE_ID=tenant-health-check
-CONTROL_PLANE_INPUT_PATH=/work/input/job.json
-CONTROL_PLANE_OUTPUT_PATH=/work/output/result.json
-CONTROL_PLANE_CALLBACK_URL=https://control.example.com/api/jobs/job-20260525-000001/callback
+CONTROL_PLANE_MODULE_VERSION=0.1.0
+CONTROL_PLANE_CLIENT_CONNECTION_ID=client-contoso
+CONTROL_PLANE_REQUESTED_BY=operator@example.com
+CONTROL_PLANE_JOB_INPUT_BASE64=<base64 encoded job input JSON>
+CONTROL_PLANE_OUTPUT_BLOB_URI=https://<storage-account>.blob.core.windows.net/artifacts/jobs/<job-id>/result.json?<job-scoped-sas>
 ```
 
-The module should read the input file, execute, write the output file, and optionally call the callback URL.
+Container Apps executions receive `CONTROL_PLANE_JOB_INPUT_BASE64` and `CONTROL_PLANE_OUTPUT_BLOB_URI`.
+The output URI is scoped to one job result blob and expires after the module timeout window.
+Local module executions may use `CONTROL_PLANE_INPUT_PATH` and `CONTROL_PLANE_OUTPUT_PATH` instead.
 
 ## Job Output
 

@@ -1,6 +1,6 @@
 {
   "moduleId": "msp-account-management-report",
-  "moduleVersion": "0.1.0",
+  "moduleVersion": "0.1.2",
   "clientConnectionId": "client-contoso",
   "targetScope": {
     "type": "Tenant",

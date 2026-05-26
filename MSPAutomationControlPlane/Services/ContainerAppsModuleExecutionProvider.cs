@@ -4,6 +4,8 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Azure.Core;
 using Azure.Identity;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 using MSPAutomationControlPlane.Domain;
 using MSPAutomationControlPlane.Repositories;
 
@@ -11,6 +13,7 @@ namespace MSPAutomationControlPlane.Services;
 
 public sealed class ContainerAppsModuleExecutionProvider(
     ContainerAppsExecutionOptions options,
+    ArtifactStorageOptions artifactStorageOptions,
     IModuleRepository moduleRepository,
     HttpClient httpClient) : IModuleExecutionProvider
 {
@@ -95,7 +98,7 @@ public sealed class ContainerAppsModuleExecutionProvider(
                         new { name = "CONTROL_PLANE_CLIENT_CONNECTION_ID", value = job.TenantContext.ClientId },
                         new { name = "CONTROL_PLANE_REQUESTED_BY", value = actor },
                         new { name = "CONTROL_PLANE_JOB_INPUT_BASE64", value = inputBase64 },
-                        new { name = "CONTROL_PLANE_OUTPUT_BLOB_URI", value = BuildResultBlobUri(job.Id) }
+                        new { name = "CONTROL_PLANE_OUTPUT_BLOB_URI", value = BuildResultBlobUri(job.Id, manifest.TimeoutSeconds) }
                     }
                 }
             }
@@ -122,11 +125,20 @@ public sealed class ContainerAppsModuleExecutionProvider(
         };
     }
 
-    private string BuildResultBlobUri(string jobId)
+    private string BuildResultBlobUri(string jobId, int timeoutSeconds)
     {
+        var blobName = JobResultCollector.GetResultBlobName(jobId);
+        var blobClient = new BlobContainerClient(artifactStorageOptions.ConnectionString, artifactStorageOptions.ContainerName)
+            .GetBlobClient(blobName);
+
+        if (blobClient.CanGenerateSasUri)
+        {
+            var expiry = DateTimeOffset.UtcNow.AddSeconds(Math.Max(timeoutSeconds, 300) + 900);
+            return blobClient.GenerateSasUri(BlobSasPermissions.Create | BlobSasPermissions.Write, expiry).ToString();
+        }
+
         var serviceUri = options.ArtifactBlobServiceUri.TrimEnd('/');
         var container = Uri.EscapeDataString(options.ArtifactContainerName);
-        var blobName = JobResultCollector.GetResultBlobName(jobId);
 
         return $"{serviceUri}/{container}/{blobName}";
     }
