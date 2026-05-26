@@ -19,6 +19,7 @@ var host = new HostBuilder()
         services.AddSingleton(LocalModuleRunnerOptions.FromEnvironment());
         services.AddSingleton<LocalModuleRunner>();
         services.AddSingleton(ExecutionProviderOptions.FromEnvironment());
+        services.AddSingleton(ArtifactStorageOptions.FromEnvironment());
         services.AddSingleton<HttpClient>();
 
         var repositoryProvider = Environment.GetEnvironmentVariable("ControlPlane__RepositoryProvider");
@@ -58,6 +59,7 @@ var host = new HostBuilder()
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
         services.AddSingleton<JobService>();
+        services.AddSingleton<JobResultCollector>();
         services.AddSingleton<IModuleExecutionProvider>(provider =>
         {
             var options = provider.GetRequiredService<ExecutionProviderOptions>();

@@ -62,7 +62,7 @@ Local development uses the local-or-simulated execution provider:
 "ControlPlane__ExecutionProvider": "LocalOrSimulated"
 ```
 
-The deployed Terraform stack also defaults to `LocalOrSimulated` while the Container Apps result collection loop is being built. To test ARM-based execution later, switch the Terraform `execution_provider` variable to `ContainerApps`. In that mode, the Function App uses its managed identity to start the reusable Container Apps Job created by Terraform. The current Container Apps slice starts an execution, passes the standard job contract as `CONTROL_PLANE_JOB_INPUT_BASE64`, and leaves the job in `Running`; a polling/result-collection slice will complete the job after module output is captured.
+The deployed Terraform stack also defaults to `LocalOrSimulated` while the Container Apps result collection loop is being built. To test ARM-based execution later, switch the Terraform `execution_provider` variable to `ContainerApps`. In that mode, the Function App uses its managed identity to start the reusable Container Apps Job created by Terraform. The current Container Apps slice starts an execution, passes the standard job contract as `CONTROL_PLANE_JOB_INPUT_BASE64`, passes `CONTROL_PLANE_OUTPUT_BLOB_URI`, and leaves the job in `Running`. The result collector reads `artifacts/jobs/{jobId}/result.json` and marks the job `Succeeded`.
 
 Local development can run sample modules through the file-based module contract:
 
@@ -103,6 +103,7 @@ DELETE /api/notification-subscriptions/{id}
 POST /api/jobs
 GET  /api/jobs
 GET  /api/jobs/{id}
+POST /api/jobs/{id}/collect-result
 GET  /api/local/job-queue
 POST /api/local/dispatch-next
 ```
@@ -183,6 +184,12 @@ After dispatch, load the job again to inspect the module output:
 
 ```powershell
 Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}' -Method Get
+```
+
+For Container Apps execution, collect a completed module output artifact:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}/collect-result' -Method Post
 ```
 
 ## Current MVP Limits

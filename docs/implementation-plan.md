@@ -52,6 +52,7 @@
 - Add worker image build and publish steps through CI/CD.
 - Add Service Bus-triggered Function to dispatch queued jobs.
 - Capture output artifacts.
+- Add result collector that reads module output from blob storage and completes running jobs.
 
 ## Phase 5: First Useful Module
 

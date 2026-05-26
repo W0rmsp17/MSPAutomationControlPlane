@@ -26,6 +26,8 @@
     "ControlPlane__LocalModules__Enabled": "true",
     "ControlPlane__LocalModules__Root": "",
     "ControlPlane__LocalModules__WorkRoot": "",
+    "Artifacts__ContainerName": "artifacts",
+    "Artifacts__BlobServiceUri": "",
     "ServiceBusConnection": "",
     "ServiceBusJobQueueName": "jobs"
   }

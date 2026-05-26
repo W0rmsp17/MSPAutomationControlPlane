@@ -12,10 +12,11 @@ Supported input environment variables:
 CONTROL_PLANE_INPUT_PATH=/work/input/job.json
 CONTROL_PLANE_OUTPUT_PATH=/work/output/result.json
 CONTROL_PLANE_JOB_INPUT_BASE64=<base64 encoded job input JSON>
+CONTROL_PLANE_OUTPUT_BLOB_URI=https://<account>.blob.core.windows.net/artifacts/jobs/<job-id>/result.json
 ```
 
 For local file-based execution, use `CONTROL_PLANE_INPUT_PATH` and `CONTROL_PLANE_OUTPUT_PATH`.
-For Container Apps execution, the control plane can pass `CONTROL_PLANE_JOB_INPUT_BASE64`; when `CONTROL_PLANE_OUTPUT_PATH` is not set, the module writes the result JSON to stdout.
+For Container Apps execution, the control plane can pass `CONTROL_PLANE_JOB_INPUT_BASE64` and `CONTROL_PLANE_OUTPUT_BLOB_URI`. The module uploads result JSON to the output blob using managed identity. When `CONTROL_PLANE_OUTPUT_PATH` is not set, the module also writes the result JSON to stdout.
 
 Exit codes:
 

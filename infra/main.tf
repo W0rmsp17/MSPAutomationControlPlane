@@ -187,6 +187,7 @@ resource "azurerm_windows_function_app" "control_api" {
     ServiceBusConnection                           = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
     ServiceBusJobQueueName                         = azurerm_servicebus_queue.jobs.name
     Artifacts__ContainerName                       = azurerm_storage_container.artifacts.name
+    Artifacts__BlobServiceUri                      = azurerm_storage_account.main.primary_blob_endpoint
     KeyVault__Uri                                  = azurerm_key_vault.main.vault_uri
   }
 
@@ -258,4 +259,10 @@ resource "azurerm_role_assignment" "function_start_container_jobs" {
   scope                = azurerm_container_app_job.module_worker.id
   role_definition_name = "Contributor"
   principal_id         = azurerm_windows_function_app.control_api.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "module_worker_write_artifacts" {
+  scope                = azurerm_storage_account.main.id
+  role_definition_name = "Storage Blob Data Contributor"
+  principal_id         = azurerm_container_app_job.module_worker.identity[0].principal_id
 }

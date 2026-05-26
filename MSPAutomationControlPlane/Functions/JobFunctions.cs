@@ -7,7 +7,7 @@ using MSPAutomationControlPlane.Services;
 
 namespace MSPAutomationControlPlane.Functions;
 
-public sealed class JobFunctions(JobService jobService)
+public sealed class JobFunctions(JobService jobService, JobResultCollector jobResultCollector)
 {
     [Function("ListJobs")]
     public async Task<HttpResponseData> ListJobs(
@@ -51,5 +51,20 @@ public sealed class JobFunctions(JobService jobService)
         }
 
         return await request.WriteJsonAsync(HttpStatusCode.OK, job);
+    }
+
+    [Function("CollectJobResult")]
+    public async Task<HttpResponseData> CollectJobResult(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "jobs/{id}/collect-result")] HttpRequestData request,
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var result = await jobResultCollector.CollectAsync(id, cancellationToken);
+        if (!result.Succeeded)
+        {
+            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, result.Error);
+        }
+
+        return await request.WriteJsonAsync(HttpStatusCode.OK, result.Value!);
     }
 }

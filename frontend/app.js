@@ -470,6 +470,20 @@ function wireForms() {
       setMessage(error.message, "bad");
     }
   });
+
+  el("collect-job-button").addEventListener("click", async () => {
+    try {
+      const job = await api(`jobs/${encodeURIComponent(el("job-id").value.trim())}/collect-result`, {
+        method: "POST"
+      });
+      await refreshAll();
+      renderJobResult(job);
+      el("job-output").textContent = pretty(job);
+      setMessage("Job result collected.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
 }
 
 function wireSettings() {

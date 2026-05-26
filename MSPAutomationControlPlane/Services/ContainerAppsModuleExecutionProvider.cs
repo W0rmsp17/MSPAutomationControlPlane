@@ -94,7 +94,8 @@ public sealed class ContainerAppsModuleExecutionProvider(
                         new { name = "CONTROL_PLANE_MODULE_VERSION", value = job.ModuleVersion },
                         new { name = "CONTROL_PLANE_CLIENT_CONNECTION_ID", value = job.TenantContext.ClientId },
                         new { name = "CONTROL_PLANE_REQUESTED_BY", value = actor },
-                        new { name = "CONTROL_PLANE_JOB_INPUT_BASE64", value = inputBase64 }
+                        new { name = "CONTROL_PLANE_JOB_INPUT_BASE64", value = inputBase64 },
+                        new { name = "CONTROL_PLANE_OUTPUT_BLOB_URI", value = BuildResultBlobUri(job.Id) }
                     }
                 }
             }
@@ -119,6 +120,15 @@ public sealed class ContainerAppsModuleExecutionProvider(
             targetScope = job.TargetScope,
             parameters = job.Parameters
         };
+    }
+
+    private string BuildResultBlobUri(string jobId)
+    {
+        var serviceUri = options.ArtifactBlobServiceUri.TrimEnd('/');
+        var container = Uri.EscapeDataString(options.ArtifactContainerName);
+        var blobName = JobResultCollector.GetResultBlobName(jobId);
+
+        return $"{serviceUri}/{container}/{blobName}";
     }
 
     private static string? ReadExecutionName(string responseBody)

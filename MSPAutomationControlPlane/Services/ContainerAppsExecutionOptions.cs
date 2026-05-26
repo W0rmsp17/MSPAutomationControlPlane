@@ -16,6 +16,10 @@ public sealed class ContainerAppsExecutionOptions
 
     public string Memory { get; init; } = "0.5Gi";
 
+    public required string ArtifactContainerName { get; init; }
+
+    public required string ArtifactBlobServiceUri { get; init; }
+
     public static ContainerAppsExecutionOptions FromEnvironment()
     {
         return new ContainerAppsExecutionOptions
@@ -28,7 +32,9 @@ public sealed class ContainerAppsExecutionOptions
             Cpu = double.TryParse(Environment.GetEnvironmentVariable("ControlPlane__ContainerApps__Cpu"), out var cpu)
                 ? cpu
                 : 0.25,
-            Memory = Environment.GetEnvironmentVariable("ControlPlane__ContainerApps__Memory") ?? "0.5Gi"
+            Memory = Environment.GetEnvironmentVariable("ControlPlane__ContainerApps__Memory") ?? "0.5Gi",
+            ArtifactContainerName = GetRequired("Artifacts__ContainerName"),
+            ArtifactBlobServiceUri = GetRequired("Artifacts__BlobServiceUri")
         };
     }
 

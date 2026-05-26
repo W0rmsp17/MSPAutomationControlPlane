@@ -1,10 +1,14 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Azure;
+using Azure.Identity;
+using Azure.Storage.Blobs;
 using TenantHealthCheck;
 
 var inputPath = Environment.GetEnvironmentVariable("CONTROL_PLANE_INPUT_PATH");
 var outputPath = Environment.GetEnvironmentVariable("CONTROL_PLANE_OUTPUT_PATH");
 var inputBase64 = Environment.GetEnvironmentVariable("CONTROL_PLANE_JOB_INPUT_BASE64");
+var outputBlobUri = Environment.GetEnvironmentVariable("CONTROL_PLANE_OUTPUT_BLOB_URI");
 
 if (string.IsNullOrWhiteSpace(inputPath) && string.IsNullOrWhiteSpace(inputBase64))
 {
@@ -27,6 +31,13 @@ try
 
     var output = TenantHealthCheckRunner.Run(input, DateTimeOffset.UtcNow);
     var outputJson = JsonSerializer.Serialize(output, ModuleJson.Options);
+
+    if (!string.IsNullOrWhiteSpace(outputBlobUri))
+    {
+        var blobClient = new BlobClient(new Uri(outputBlobUri), new DefaultAzureCredential());
+        using var uploadContent = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(outputJson));
+        await blobClient.UploadAsync(uploadContent, overwrite: true);
+    }
 
     if (string.IsNullOrWhiteSpace(outputPath))
     {
@@ -56,5 +67,10 @@ catch (JsonException ex)
 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
 {
     Console.Error.WriteLine($"Could not write module output: {ex.Message}");
+    return 3;
+}
+catch (RequestFailedException ex)
+{
+    Console.Error.WriteLine($"Could not upload module output: {ex.Message}");
     return 3;
 }
