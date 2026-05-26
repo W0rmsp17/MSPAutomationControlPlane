@@ -75,6 +75,59 @@ const samples = {
     targetUrl: "https://example.invalid/webhook",
     eventTypes: ["JobSubmitted", "JobCompleted", "JobFailed"],
     enabled: true
+  },
+  accountReportImport: {
+    source: {
+      type: "git",
+      repository: "https://github.com/W0rmsp17/MSPAccountManagementReport",
+      ref: "v0.1.2",
+      manifestPath: "module.manifest.json"
+    },
+    registration: {
+      enabled: true,
+      visibility: "Private",
+      allowedClientConnectionIds: [],
+      defaultRunMode: "Standard"
+    },
+    validation: {
+      requireImageTagMatch: true,
+      requirePackageValidation: true,
+      allowMovingRef: false
+    }
+  },
+  accountReportClient: {
+    id: "client-account-report-demo",
+    displayName: "Account Report Demo Client",
+    tenantId: "00000000-0000-0000-0000-000000000000",
+    executionMode: "Central",
+    executionAppClientId: "00000000-0000-0000-0000-000000000000",
+    certificateReference: "kv://clients/client-account-report-demo/graph-certificate",
+    servicePrincipalObjectId: "00000000-0000-0000-0000-000000000000",
+    readinessStatus: "Ready",
+    configuredPermissions: [
+      {
+        provider: "MicrosoftGraph",
+        permission: "Organization.Read.All",
+        type: "Application",
+        adminConsented: true
+      },
+      {
+        provider: "MicrosoftGraph",
+        permission: "User.Read.All",
+        type: "Application",
+        adminConsented: true
+      },
+      {
+        provider: "MicrosoftGraph",
+        permission: "Directory.Read.All",
+        type: "Application",
+        adminConsented: true
+      }
+    ],
+    readinessNotes: "Demo connection for account-management report execution.",
+    enabledModuleIds: ["msp-account-management-report"],
+    allowedScopes: ["Tenant", "Users"],
+    enabled: true
   }
 };
 
@@ -95,6 +148,22 @@ samples.job = {
   },
   parameters: {
     includeUsers: true
+  }
+};
+
+samples.accountReportJob = {
+  moduleId: "msp-account-management-report",
+  moduleVersion: "0.1.2",
+  clientConnectionId: samples.accountReportClient.id,
+  targetScope: {
+    type: "Tenant",
+    mode: "All",
+    targets: []
+  },
+  parameters: {
+    includeInactiveUsers: true,
+    includeLicenseWaste: true,
+    reportFormat: "markdown"
   }
 };
 
@@ -249,7 +318,9 @@ function listItem(title, meta, pillText) {
 
 function renderJobResult(job) {
   const target = el("job-result-summary");
+  const reportTarget = el("job-report");
   target.innerHTML = "";
+  reportTarget.textContent = "";
 
   if (!job?.output) {
     target.classList.add("hidden");
@@ -296,7 +367,7 @@ function renderJobResult(job) {
       findingMeta.textContent = `${finding.severity || "Info"}${finding.code ? ` - ${finding.code}` : ""}`;
 
       const message = document.createElement("div");
-      message.textContent = finding.message || "";
+      message.textContent = finding.detail || finding.message || "";
 
       item.appendChild(findingTitle);
       item.appendChild(findingMeta);
@@ -306,6 +377,7 @@ function renderJobResult(job) {
     target.appendChild(findings);
   }
 
+  reportTarget.textContent = getRenderedReport(job) || "";
   target.classList.remove("hidden");
 }
 
@@ -378,6 +450,58 @@ function renderModulePreview() {
   }
 
   target.classList.remove("hidden");
+}
+
+function getRenderedReport(job) {
+  return job?.output?.report?.renderedReport?.content || "";
+}
+
+function renderDemoResult(job) {
+  const summaryTarget = el("demo-summary");
+  const reportTarget = el("demo-report");
+  const pill = el("demo-status-pill");
+  summaryTarget.innerHTML = "";
+  reportTarget.textContent = getRenderedReport(job) || "";
+
+  if (!job) {
+    summaryTarget.classList.add("hidden");
+    pill.textContent = "Idle";
+    pill.className = "pill muted";
+    return;
+  }
+
+  pill.textContent = job.status || "Unknown";
+  pill.className = `pill ${job.status === "Succeeded" ? "ok" : job.status === "Failed" ? "bad" : "warn"}`;
+
+  const title = document.createElement("div");
+  title.className = "result-title";
+
+  const strong = document.createElement("strong");
+  strong.textContent = job.output?.summary || job.id || "Job";
+  title.appendChild(strong);
+
+  const status = document.createElement("span");
+  status.className = pill.className;
+  status.textContent = job.status || "Unknown";
+  title.appendChild(status);
+  summaryTarget.appendChild(title);
+
+  if (job.output?.metrics) {
+    const metrics = document.createElement("div");
+    metrics.className = "result-metrics";
+    ["licenseSkuCount", "totalLicenses", "assignedLicenses", "availableLicenses", "usersChecked", "recommendationCount"].forEach((key) => {
+      if (job.output.metrics[key] === undefined) {
+        return;
+      }
+
+      const metric = document.createElement("span");
+      metric.textContent = `${key}: ${job.output.metrics[key]}`;
+      metrics.appendChild(metric);
+    });
+    summaryTarget.appendChild(metrics);
+  }
+
+  summaryTarget.classList.remove("hidden");
 }
 
 function renderClientPreview() {
@@ -666,6 +790,43 @@ async function submitJsonForm(textareaId, path) {
   return result;
 }
 
+function errorText(error) {
+  return error?.message || String(error);
+}
+
+async function importModuleRelease(payload) {
+  try {
+    return await api("modules/import", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    if (errorText(error).includes("already registered")) {
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+async function registerOrUpdateClient(payload) {
+  try {
+    return await api("client-connections", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+  } catch (error) {
+    if (!errorText(error).includes("already registered")) {
+      throw error;
+    }
+
+    return api(`client-connections/${encodeURIComponent(payload.id)}`, {
+      method: "PUT",
+      body: JSON.stringify(payload)
+    });
+  }
+}
+
 function wireNavigation() {
   document.querySelectorAll(".nav-item").forEach((button) => {
     button.addEventListener("click", () => {
@@ -746,6 +907,16 @@ function wireForms() {
     }
   });
 
+  el("import-module-button").addEventListener("click", async () => {
+    try {
+      await importModuleRelease(JSON.parse(el("module-import-json").value));
+      await refreshAll();
+      setMessage("Module release imported.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
   el("compose-job-button").addEventListener("click", () => {
     try {
       const payload = composeJobRequestFromControls();
@@ -794,6 +965,65 @@ function wireForms() {
       setMessage(error.message, "bad");
     }
   });
+
+  el("demo-import-module-button").addEventListener("click", async () => {
+    try {
+      await importModuleRelease(samples.accountReportImport);
+      await refreshAll();
+      setMessage("Account report module imported.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("demo-register-client-button").addEventListener("click", async () => {
+    try {
+      const payload = JSON.parse(el("demo-client-json").value);
+      await registerOrUpdateClient(payload);
+      await refreshAll();
+      setMessage("Demo client saved.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("demo-submit-job-button").addEventListener("click", async () => {
+    try {
+      const payload = JSON.parse(el("demo-job-json").value);
+      const job = await api("jobs", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      el("demo-job-id").value = job.id;
+      el("job-id").value = job.id;
+      renderDemoResult(job);
+      await refreshAll();
+      setMessage("Demo job submitted.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("demo-collect-job-button").addEventListener("click", async () => {
+    try {
+      const jobId = el("demo-job-id").value.trim();
+      if (!jobId) {
+        throw new Error("Job ID is required.");
+      }
+
+      const job = await api(`jobs/${encodeURIComponent(jobId)}/collect-result`, {
+        method: "POST"
+      });
+      renderDemoResult(job);
+      el("job-id").value = job.id;
+      el("job-output").textContent = pretty(job);
+      renderJobResult(job);
+      await refreshAll();
+      setMessage("Demo result collected.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
 }
 
 function wireSettings() {
@@ -812,11 +1042,14 @@ function wireSettings() {
 
 function seedTextareas() {
   el("client-json").value = pretty(samples.client);
+  el("module-import-json").value = pretty(samples.accountReportImport);
   el("module-json").value = pretty(samples.module);
   el("job-targets").value = samples.job.targetScope.targets.map((target) => target.userPrincipalName || target.id).join("\n");
   el("job-parameters").value = pretty(samples.job.parameters);
   el("job-json").value = pretty(samples.job);
   el("notification-json").value = pretty(samples.notification);
+  el("demo-client-json").value = pretty(samples.accountReportClient);
+  el("demo-job-json").value = pretty(samples.accountReportJob);
   renderClientPreview();
   renderModulePreview();
 }

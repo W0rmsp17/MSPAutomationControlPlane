@@ -22,10 +22,10 @@ This project provides the reusable control plane around those automations:
 Use short focused GIFs in the README or project page:
 
 1. Operator sign-in and dashboard load.
-2. Client connection preview and readiness metadata.
-3. Module manifest preview.
-4. Guided job compose plus readiness check.
-5. Job result collection and structured output.
+2. Demo view import module, register client, and submit job.
+3. Container Apps execution appears in job history.
+4. Job result collection and rendered account report output.
+5. Module catalog showing the imported account-management report release.
 
 Keep each GIF around 10-15 seconds.
 
@@ -38,10 +38,32 @@ Suggested structure:
 1. State the MSP problem.
 2. Show the architecture diagram.
 3. Open the protected management UI.
-4. Show client connection and module readiness.
-5. Compose and submit a job.
-6. Collect job output.
-7. Explain why the design is low-cost and secure.
+4. Use the Demo view to import the account-management report module release.
+5. Register the demo client connection.
+6. Submit the account report job.
+7. Collect job output and show the rendered report.
+8. Explain why the design is low-cost and secure.
+
+## Demo View Flow
+
+The management UI includes a Demo view for the account-management report module.
+
+Recommended run:
+
+1. `Import module`
+2. `Register client`
+3. `Submit job`
+4. Wait for the Container Apps Job execution to complete.
+5. `Collect result`
+
+The Demo view uses public-safe placeholder tenant and app IDs. It validates the control-plane execution path and renders the module output, but it does not prove live Microsoft Graph collection until the client connection is backed by real target-tenant credentials.
+
+Expected result:
+
+- Job moves from `Queued` to `Running`.
+- Container Apps execution reaches `Succeeded`.
+- Result collection moves the control-plane job to `Succeeded`.
+- Rendered Markdown report appears in the Demo view.
 
 ## Demo Script
 
@@ -57,6 +79,8 @@ The operator signs in with Microsoft Entra. A client connection defines which te
 Before a job runs, the platform checks readiness. If permissions, scopes, or module enablement are not right, the job is blocked before execution.
 
 When a job is submitted, the API queues it through Service Bus. A Function dispatcher starts a Container Apps Job, the module writes structured output to Blob Storage, and the control plane collects the result back into job history.
+
+The account-management report demo shows this with a real module image. The module receives a standard input payload, writes output through the standard blob output URI, and returns license and user signals in a consistent report format.
 
 This pattern keeps the platform low-cost at idle while still giving MSPs repeatable, auditable automation across client environments.
 ```

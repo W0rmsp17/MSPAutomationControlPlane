@@ -20,6 +20,7 @@
           <button class="nav-item active" data-view="overview">Overview</button>
           <button class="nav-item" data-view="clients">Clients</button>
           <button class="nav-item" data-view="modules">Modules</button>
+          <button class="nav-item" data-view="demo">Demo</button>
           <button class="nav-item" data-view="jobs">Jobs</button>
           <button class="nav-item" data-view="notifications">Notifications</button>
           <button class="nav-item" data-view="audit">Audit</button>
@@ -111,11 +112,44 @@
               <div class="panel-header">
                 <h2>Add Module</h2>
               </div>
+              <label for="module-import-json">Import release JSON</label>
+              <textarea id="module-import-json" class="compact-textarea" spellcheck="false"></textarea>
+              <button id="import-module-button" class="button secondary" type="button">Import release</button>
               <label for="module-json">Manifest JSON</label>
               <textarea id="module-json" spellcheck="false"></textarea>
               <div id="module-preview" class="preview-box hidden"></div>
               <button class="button primary" type="submit">Register module</button>
             </form>
+          </div>
+        </section>
+
+        <section id="demo" class="view">
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Account Report Run</h2>
+                <span id="demo-status-pill" class="pill muted">Idle</span>
+              </div>
+              <div class="demo-actions">
+                <button id="demo-import-module-button" class="button secondary" type="button">Import module</button>
+                <button id="demo-register-client-button" class="button secondary" type="button">Register client</button>
+                <button id="demo-submit-job-button" class="button primary" type="button">Submit job</button>
+                <button id="demo-collect-job-button" class="button secondary" type="button">Collect result</button>
+              </div>
+              <div id="demo-summary" class="result-summary hidden"></div>
+              <pre id="demo-report" class="report-output"></pre>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Run Payload</h2>
+              </div>
+              <label for="demo-client-json">Client JSON</label>
+              <textarea id="demo-client-json" class="compact-textarea" spellcheck="false"></textarea>
+              <label for="demo-job-json">Job JSON</label>
+              <textarea id="demo-job-json" class="compact-textarea" spellcheck="false"></textarea>
+              <label for="demo-job-id">Job ID</label>
+              <input id="demo-job-id" type="text" placeholder="job-...">
+            </div>
           </div>
         </section>
 
@@ -137,6 +171,7 @@
                 <button id="collect-job-button" class="button secondary" type="button">Collect</button>
               </div>
               <div id="job-result-summary" class="result-summary hidden"></div>
+              <pre id="job-report" class="report-output"></pre>
               <pre id="job-output" class="json-output"></pre>
             </div>
           </div>

@@ -130,7 +130,8 @@ h2 {
 
 .topbar-actions,
 .inline-form,
-.button-row {
+.button-row,
+.demo-actions {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -369,6 +370,23 @@ textarea {
   white-space: pre-wrap;
 }
 
+.report-output {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  color: var(--ink);
+  margin: 14px 0 0;
+  min-height: 240px;
+  overflow: auto;
+  padding: 14px;
+  white-space: pre-wrap;
+}
+
+.report-output:empty {
+  display: none;
+}
+
 .result-summary {
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -432,6 +450,11 @@ textarea {
   gap: 8px;
 }
 
+.demo-actions {
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+
 .finding {
   border-left: 3px solid var(--brand);
   padding-left: 10px;
@@ -461,7 +484,8 @@ textarea {
   .topbar,
   .topbar-actions,
   .inline-form,
-  .button-row {
+  .button-row,
+  .demo-actions {
     align-items: stretch;
     flex-direction: column;
   }
