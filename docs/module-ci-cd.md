@@ -71,6 +71,19 @@ The module CI workflow should:
 
 The first workflow can build only. Publishing to GHCR can be enabled once repository package permissions and naming are final.
 
+The in-repo `tenant-health-check` workflow publishes when either:
+
+- A tag matching `tenant-health-check-v*` is pushed.
+- The workflow is run manually through GitHub Actions.
+
+The current image tag is:
+
+```text
+ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.0
+```
+
+After publish, the workflow uploads the module manifest and image digest as an artifact. The control plane registers the manifest image reference; future hardening should prefer digest-pinned image references.
+
 ## Security Boundary
 
 The design intentionally separates responsibilities:
