@@ -32,6 +32,29 @@ public sealed class ModuleFunctions(ModuleRegistryService moduleRegistryService)
         return await request.WriteJsonAsync(HttpStatusCode.Created, result.Value!);
     }
 
+    [Function("ImportModule")]
+    public async Task<HttpResponseData> ImportModule(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "modules/import")] HttpRequestData request,
+        CancellationToken cancellationToken)
+    {
+        var importRequest = await request.ReadJsonAsync<ModuleImportRequest>(cancellationToken);
+        if (importRequest is null)
+        {
+            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, "Request body is required.");
+        }
+
+        var result = await moduleRegistryService.ImportAsync(importRequest, cancellationToken);
+        if (!result.Succeeded)
+        {
+            return await request.WriteProblemAsync(
+                HttpStatusCode.BadRequest,
+                "Module import failed.",
+                result.Errors);
+        }
+
+        return await request.WriteJsonAsync(HttpStatusCode.Created, result.Value!);
+    }
+
     [Function("ListModules")]
     public async Task<HttpResponseData> ListModules(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "modules")] HttpRequestData request,

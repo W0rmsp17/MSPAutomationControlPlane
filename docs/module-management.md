@@ -24,6 +24,17 @@ GET /api/modules/{moduleId}
   -> Return module details, supported scopes, required permissions, and latest run summary
 ```
 
+Repository import flow:
+
+```text
+POST /api/modules/import
+  -> Fetch module.manifest.json from a trusted repository ref or manifest URL
+  -> Validate module manifest
+  -> Check module ID and version uniqueness
+  -> Store registered module
+  -> Return module registration result
+```
+
 The UI can later call the same APIs.
 
 ## Future Management UI
@@ -81,9 +92,12 @@ The manifest provides:
 Supported intake paths:
 
 - Manual JSON manifest registration for labs, demos, and early module development.
+- Repository import using a manifest path and immutable ref, such as a release tag.
 - CI/CD-produced artifacts where GitHub Actions or another pipeline tests module code, builds a container image, and publishes a manifest referencing that image.
 
 Both paths converge on `POST /api/modules`. The control plane validates the manifest, stores the registration, and later schedules the referenced image. It does not build or execute raw Git source.
+
+For the released account-management report module, see `samples/import-account-management-report-module.json`.
 
 See [Module CI/CD Model](./module-ci-cd.md) for the full pipeline model.
 

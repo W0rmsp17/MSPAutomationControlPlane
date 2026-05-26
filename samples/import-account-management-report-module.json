@@ -1,0 +1,18 @@
+{
+  "source": {
+    "type": "git",
+    "repository": "https://github.com/W0rmsp17/MSPAccountManagementReport",
+    "ref": "v0.1.0",
+    "manifestPath": "module.manifest.json"
+  },
+  "registration": {
+    "enabled": true,
+    "visibility": "Private",
+    "allowedClientConnectionIds": [],
+    "defaultRunMode": "Standard"
+  },
+  "validation": {
+    "requireImageTagMatch": true,
+    "requirePackageValidation": true
+  }
+}

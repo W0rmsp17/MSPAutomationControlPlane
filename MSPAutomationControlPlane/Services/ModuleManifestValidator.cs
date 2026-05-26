@@ -58,6 +58,8 @@ public sealed partial class ModuleManifestValidator(ModuleRegistryOptions option
         ValidateImage(errors, manifest.Image);
         ValidateJsonSchema(errors, manifest.ParametersSchema, "parametersSchema");
         ValidateJsonSchema(errors, manifest.OutputsSchema, "outputsSchema");
+        ValidateOptionalJsonObject(errors, manifest.ExecutionContract, "executionContract");
+        ValidateDataHandling(errors, manifest.DataHandling);
         ValidateRequiredPermissions(errors, manifest.RequiredPermissions);
 
         return errors.Count == 0
@@ -104,6 +106,44 @@ public sealed partial class ModuleManifestValidator(ModuleRegistryOptions option
             !string.Equals(type.GetString(), "object", StringComparison.OrdinalIgnoreCase))
         {
             errors.Add($"{fieldName}.type must be 'object' for the MVP.");
+        }
+    }
+
+    private static void ValidateOptionalJsonObject(List<string> errors, System.Text.Json.JsonElement value, string fieldName)
+    {
+        if (value.ValueKind is System.Text.Json.JsonValueKind.Undefined or System.Text.Json.JsonValueKind.Null)
+        {
+            return;
+        }
+
+        if (value.ValueKind != System.Text.Json.JsonValueKind.Object)
+        {
+            errors.Add($"{fieldName} must be a JSON object.");
+        }
+    }
+
+    private static void ValidateDataHandling(List<string> errors, DataHandlingMetadata? dataHandling)
+    {
+        if (dataHandling is null)
+        {
+            return;
+        }
+
+        ValidateRequiredText(errors, dataHandling.Classification, "dataHandling.classification");
+
+        if (dataHandling.ContainsPersonalData is null)
+        {
+            errors.Add("dataHandling.containsPersonalData is required when dataHandling is supplied.");
+        }
+
+        if (dataHandling.ContainsSecrets is null)
+        {
+            errors.Add("dataHandling.containsSecrets is required when dataHandling is supplied.");
+        }
+
+        if (dataHandling.RetentionRecommendationDays is < 1)
+        {
+            errors.Add("dataHandling.retentionRecommendationDays must be at least 1 when supplied.");
         }
     }
 

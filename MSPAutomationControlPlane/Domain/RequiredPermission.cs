@@ -7,4 +7,6 @@ public sealed class RequiredPermission
     public required string Permission { get; init; }
 
     public required string Type { get; init; }
+
+    public string? Reason { get; init; }
 }
