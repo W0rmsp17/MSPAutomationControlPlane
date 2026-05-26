@@ -321,12 +321,30 @@ function renderModulePreview() {
     return;
   }
 
+  const requiredFields = ["id", "name", "version", "image"];
+  const issues = requiredFields
+    .filter((field) => !manifest[field])
+    .map((field) => `Missing required field: ${field}.`);
+
+  if (!Array.isArray(manifest.supportedScopes) || !manifest.supportedScopes.length) {
+    issues.push("At least one supported scope should be declared.");
+  }
+
+  if (!manifest.parametersSchema || typeof manifest.parametersSchema !== "object") {
+    issues.push("Parameters schema should be an object.");
+  }
+
+  if (!manifest.outputsSchema || typeof manifest.outputsSchema !== "object") {
+    issues.push("Outputs schema should be an object.");
+  }
+
   const rows = [
     ["Module", `${manifest.name || manifest.id || "Unnamed"} (${manifest.id || "no id"})`],
     ["Version", manifest.version || "Not set"],
     ["Runtime", manifest.runtime || "Not set"],
     ["Image", manifest.image || "Not set"],
     ["Scopes", Array.isArray(manifest.supportedScopes) ? manifest.supportedScopes.join(", ") : "Not set"],
+    ["Permissions", `${manifest.requiredPermissions?.length || 0} required`],
     ["Approval", manifest.approvalRequired ? "Required" : "Not required"]
   ];
 
@@ -344,6 +362,20 @@ function renderModulePreview() {
     row.appendChild(valueNode);
     target.appendChild(row);
   });
+
+  if (issues.length) {
+    issues.forEach((issue) => {
+      const item = document.createElement("div");
+      item.className = "meta";
+      item.textContent = issue;
+      target.appendChild(item);
+    });
+  } else {
+    const item = document.createElement("div");
+    item.className = "meta";
+    item.textContent = "Manifest preview passed basic client-side checks.";
+    target.appendChild(item);
+  }
 
   target.classList.remove("hidden");
 }
@@ -537,7 +569,12 @@ function render() {
 
   renderList("modules-list", state.modules, (module) => {
     const manifest = getRegisteredModuleManifest(module);
-    return listItem(manifest.name || manifest.id, `${manifest.id || ""} - ${manifest.version || ""}`, manifest.runtime || "module");
+    const item = listItem(manifest.name || manifest.id, `${manifest.id || ""} - ${manifest.version || ""}`, manifest.runtime || "module");
+    item.addEventListener("click", () => {
+      el("module-json").value = pretty(manifest);
+      renderModulePreview();
+    });
+    return item;
   });
 
   renderList("notifications-list", state.notifications, (subscription) =>
