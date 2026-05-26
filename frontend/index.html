@@ -145,6 +145,40 @@
               <div class="panel-header">
                 <h2>Submit Job</h2>
               </div>
+              <div class="compose-grid">
+                <div>
+                  <label for="job-client-select">Client</label>
+                  <select id="job-client-select"></select>
+                </div>
+                <div>
+                  <label for="job-module-select">Module</label>
+                  <select id="job-module-select"></select>
+                </div>
+                <div>
+                  <label for="job-scope-type">Scope</label>
+                  <select id="job-scope-type">
+                    <option value="Tenant">Tenant</option>
+                    <option value="Users" selected>Users</option>
+                    <option value="Groups">Groups</option>
+                    <option value="Devices">Devices</option>
+                    <option value="Subscriptions">Subscriptions</option>
+                    <option value="ResourceGroups">ResourceGroups</option>
+                    <option value="Custom">Custom</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="job-scope-mode">Mode</label>
+                  <select id="job-scope-mode">
+                    <option value="Selected" selected>Selected</option>
+                    <option value="All">All</option>
+                  </select>
+                </div>
+              </div>
+              <label for="job-targets">Targets</label>
+              <textarea id="job-targets" class="compact-textarea" spellcheck="false" placeholder="one target per line, for example alex.example@contoso.com"></textarea>
+              <label for="job-parameters">Parameters JSON</label>
+              <textarea id="job-parameters" class="compact-textarea" spellcheck="false"></textarea>
+              <button id="compose-job-button" class="button secondary" type="button">Compose request</button>
               <label for="job-json">Job request JSON</label>
               <textarea id="job-json" spellcheck="false"></textarea>
               <div id="job-readiness" class="preview-box hidden"></div>

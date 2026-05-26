@@ -402,6 +402,58 @@ function readinessRequestFromJobPayload(payload) {
   };
 }
 
+function getRegisteredModuleManifest(moduleRegistration) {
+  return moduleRegistration?.manifest || moduleRegistration;
+}
+
+function selectedModuleManifest() {
+  const selectedValue = el("job-module-select").value;
+  return state.modules
+    .map(getRegisteredModuleManifest)
+    .find((manifest) => `${manifest.id}@${manifest.version}` === selectedValue);
+}
+
+function parseTargets(text, scopeType) {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((value) => ({
+      id: value,
+      displayName: value,
+      ...(scopeType === "Users" ? { userPrincipalName: value } : {})
+    }));
+}
+
+function composeJobRequestFromControls() {
+  const moduleManifest = selectedModuleManifest();
+  if (!moduleManifest) {
+    throw new Error("Select a module before composing a job request.");
+  }
+
+  const clientConnectionId = el("job-client-select").value;
+  if (!clientConnectionId) {
+    throw new Error("Select a client before composing a job request.");
+  }
+
+  const scopeType = el("job-scope-type").value;
+  const scopeMode = el("job-scope-mode").value;
+  const parametersText = el("job-parameters").value.trim();
+  const parameters = parametersText ? JSON.parse(parametersText) : {};
+
+  return {
+    moduleId: moduleManifest.id,
+    moduleVersion: moduleManifest.version,
+    clientConnectionId,
+    targetScope: {
+      type: scopeType,
+      mode: scopeMode,
+      targets: scopeMode === "Selected" ? parseTargets(el("job-targets").value, scopeType) : []
+    },
+    parameters
+  };
+}
+
 function renderReadinessResult(result) {
   const target = el("job-readiness");
   target.innerHTML = "";
@@ -484,7 +536,7 @@ function render() {
   });
 
   renderList("modules-list", state.modules, (module) => {
-    const manifest = module.manifest || module;
+    const manifest = getRegisteredModuleManifest(module);
     return listItem(manifest.name || manifest.id, `${manifest.id || ""} - ${manifest.version || ""}`, manifest.runtime || "module");
   });
 
@@ -507,6 +559,38 @@ function render() {
 
   renderTimeline("audit-list", state.auditEvents);
   renderTimeline("recent-activity", state.auditEvents);
+  renderJobComposerOptions();
+}
+
+function renderJobComposerOptions() {
+  const clientSelect = el("job-client-select");
+  const moduleSelect = el("job-module-select");
+  const selectedClient = clientSelect.value;
+  const selectedModule = moduleSelect.value;
+
+  clientSelect.innerHTML = "";
+  state.clients.forEach((client) => {
+    const option = document.createElement("option");
+    option.value = client.id;
+    option.textContent = `${client.displayName || client.id} (${client.readinessStatus || "Unknown"})`;
+    clientSelect.appendChild(option);
+  });
+
+  moduleSelect.innerHTML = "";
+  state.modules.map(getRegisteredModuleManifest).forEach((manifest) => {
+    const option = document.createElement("option");
+    option.value = `${manifest.id}@${manifest.version}`;
+    option.textContent = `${manifest.name || manifest.id} (${manifest.version})`;
+    moduleSelect.appendChild(option);
+  });
+
+  if ([...clientSelect.options].some((option) => option.value === selectedClient)) {
+    clientSelect.value = selectedClient;
+  }
+
+  if ([...moduleSelect.options].some((option) => option.value === selectedModule)) {
+    moduleSelect.value = selectedModule;
+  }
 }
 
 async function refreshAll() {
@@ -625,6 +709,17 @@ function wireForms() {
     }
   });
 
+  el("compose-job-button").addEventListener("click", () => {
+    try {
+      const payload = composeJobRequestFromControls();
+      el("job-json").value = pretty(payload);
+      el("job-readiness").classList.add("hidden");
+      setMessage("Job request composed.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
   el("check-job-readiness-button").addEventListener("click", async () => {
     try {
       const payload = JSON.parse(el("job-json").value);
@@ -681,6 +776,8 @@ function wireSettings() {
 function seedTextareas() {
   el("client-json").value = pretty(samples.client);
   el("module-json").value = pretty(samples.module);
+  el("job-targets").value = samples.job.targetScope.targets.map((target) => target.userPrincipalName || target.id).join("\n");
+  el("job-parameters").value = pretty(samples.job.parameters);
   el("job-json").value = pretty(samples.job);
   el("notification-json").value = pretty(samples.notification);
   renderClientPreview();
