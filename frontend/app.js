@@ -246,6 +246,68 @@ function listItem(title, meta, pillText) {
   return item;
 }
 
+function renderJobResult(job) {
+  const target = el("job-result-summary");
+  target.innerHTML = "";
+
+  if (!job?.output) {
+    target.classList.add("hidden");
+    return;
+  }
+
+  const output = job.output;
+  const title = document.createElement("div");
+  title.className = "result-title";
+
+  const summary = document.createElement("strong");
+  summary.textContent = output.summary || "Module output";
+  title.appendChild(summary);
+
+  const status = document.createElement("span");
+  status.className = `pill ${String(output.status || job.status).toLowerCase() === "succeeded" ? "ok" : "warn"}`;
+  status.textContent = output.status || job.status || "Unknown";
+  title.appendChild(status);
+  target.appendChild(title);
+
+  if (output.metrics && Object.keys(output.metrics).length) {
+    const metrics = document.createElement("div");
+    metrics.className = "result-metrics";
+    Object.entries(output.metrics).forEach(([key, value]) => {
+      const metric = document.createElement("span");
+      metric.textContent = `${key}: ${value}`;
+      metrics.appendChild(metric);
+    });
+    target.appendChild(metrics);
+  }
+
+  if (Array.isArray(output.findings) && output.findings.length) {
+    const findings = document.createElement("div");
+    findings.className = "result-findings";
+    output.findings.slice(0, 6).forEach((finding) => {
+      const item = document.createElement("article");
+      item.className = "finding";
+
+      const findingTitle = document.createElement("strong");
+      findingTitle.textContent = finding.title || finding.code || "Finding";
+
+      const findingMeta = document.createElement("div");
+      findingMeta.className = "meta";
+      findingMeta.textContent = `${finding.severity || "Info"}${finding.code ? ` - ${finding.code}` : ""}`;
+
+      const message = document.createElement("div");
+      message.textContent = finding.message || "";
+
+      item.appendChild(findingTitle);
+      item.appendChild(findingMeta);
+      item.appendChild(message);
+      findings.appendChild(item);
+    });
+    target.appendChild(findings);
+  }
+
+  target.classList.remove("hidden");
+}
+
 function renderTimeline(targetId, events) {
   const sorted = [...events].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)));
   renderList(targetId, sorted.slice(0, 25), (event) => {
@@ -297,6 +359,7 @@ function render() {
 
     item.addEventListener("click", () => {
       el("job-id").value = job.id;
+      renderJobResult(job);
       el("job-output").textContent = pretty(job);
     });
     return item;
@@ -390,6 +453,7 @@ function wireForms() {
     try {
       const result = await submitJsonForm("job-json", "jobs");
       el("job-id").value = result.id;
+      renderJobResult(result);
       el("job-output").textContent = pretty(result);
       setMessage("Job submitted.");
     } catch (error) {
@@ -400,6 +464,7 @@ function wireForms() {
   el("load-job-button").addEventListener("click", async () => {
     try {
       const job = await api(`jobs/${encodeURIComponent(el("job-id").value.trim())}`);
+      renderJobResult(job);
       el("job-output").textContent = pretty(job);
     } catch (error) {
       setMessage(error.message, "bad");
