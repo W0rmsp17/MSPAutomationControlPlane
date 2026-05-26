@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0",
+  "id": "tenant-health-check",
+  "name": "Tenant Health Check",
+  "version": "0.1.0",
+  "description": "Validates the module execution contract and returns basic target scope health information.",
+  "image": "ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.0",
+  "runtime": "container-apps-job",
+  "timeoutSeconds": 900,
+  "concurrency": 1,
+  "approvalRequired": false,
+  "supportedScopes": [
+    "Tenant",
+    "Users"
+  ],
+  "parametersSchema": {
+    "type": "object",
+    "properties": {
+      "includeUsers": {
+        "type": "boolean",
+        "default": false
+      }
+    },
+    "required": []
+  },
+  "requiredPermissions": [
+    {
+      "provider": "MicrosoftGraph",
+      "permission": "Organization.Read.All",
+      "type": "Application"
+    }
+  ],
+  "outputsSchema": {
+    "type": "object",
+    "required": [
+      "status",
+      "summary",
+      "findings"
+    ]
+  }
+}

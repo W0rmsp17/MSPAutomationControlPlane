@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "1.0",
+  "jobId": "job-local-tenant-health-check",
+  "moduleId": "tenant-health-check",
+  "moduleVersion": "0.1.0",
+  "requestedBy": {
+    "userId": "operator-id",
+    "displayName": "Operator",
+    "upn": "operator@example.com"
+  },
+  "clientConnectionId": "client-contoso",
+  "targetScope": {
+    "type": "Users",
+    "mode": "Selected",
+    "targets": [
+      {
+        "id": "alex.example@contoso.com",
+        "displayName": "Alex Example",
+        "upn": "alex.example@contoso.com"
+      }
+    ]
+  },
+  "parameters": {
+    "includeUsers": true
+  }
+}
