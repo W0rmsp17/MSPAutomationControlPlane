@@ -98,6 +98,7 @@ GET  /api/client-connections
 GET  /api/client-connections/{id}
 PUT  /api/client-connections/{id}
 POST /api/modules
+POST /api/modules/import
 GET  /api/modules
 POST /api/notification-subscriptions
 GET  /api/notification-subscriptions
@@ -125,6 +126,14 @@ Register the sample module:
 $manifest = Get-Content .\samples\tenant-health-check.manifest.json -Raw
 Invoke-RestMethod -Uri 'http://localhost:7071/api/modules' -Method Post -ContentType 'application/json' -Body $manifest
 ```
+
+Import the released account-management report module:
+
+```powershell
+.\scripts\test-module-import.ps1
+```
+
+The default import sample expects the module repository manifest to be publicly readable at the pinned release tag. Private module repositories should use the direct manifest registration path until authenticated repository import is implemented.
 
 Register the sample client connection:
 

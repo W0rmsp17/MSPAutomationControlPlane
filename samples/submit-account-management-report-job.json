@@ -1,0 +1,15 @@
+{
+  "moduleId": "msp-account-management-report",
+  "moduleVersion": "0.1.0",
+  "clientConnectionId": "client-contoso",
+  "targetScope": {
+    "type": "Tenant",
+    "mode": "All",
+    "targets": []
+  },
+  "parameters": {
+    "includeInactiveUsers": true,
+    "includeLicenseWaste": true,
+    "reportFormat": "markdown"
+  }
+}

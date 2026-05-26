@@ -35,3 +35,11 @@ az login --tenant "<msp-tenant-id>" --scope "api://<auth-app-client-id>/access_a
 ```
 
 The smoke test intentionally exercises the API boundary with a bearer token. A direct unauthenticated call to a protected endpoint should return an error such as `Missing bearer token.`
+
+To test the module import endpoint separately, acquire an API token as above and run:
+
+```powershell
+.\scripts\test-module-import.ps1 -ApiBaseUrl "https://<function-hostname>/api" -AccessToken "<access-token>"
+```
+
+The import sample fetches a public raw manifest from the pinned module release. If the module repository is private, use direct manifest registration for now or add a trusted GitHub App/OIDC import path before enabling private repository imports.

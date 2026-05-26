@@ -99,11 +99,13 @@ Supported intake paths:
 Both paths converge on `POST /api/modules`. The control plane validates the manifest, stores the registration, and later schedules the referenced image. It does not build or execute raw Git source.
 
 For the released account-management report module, see `samples/import-account-management-report-module.json`.
+To smoke test the import endpoint against a running local or deployed API, use `scripts/test-module-import.ps1`.
 
 Repository import does not mean the MSP tenant blindly trusts Git.
 The control plane should trust only a validated, pinned, operator-approved module registration.
 Imports from moving refs such as `main`, `master`, `develop`, `dev`, `trunk`, or `HEAD` are rejected by default.
 Use release tags or commit SHAs for repeatable imports.
+The MVP importer fetches public raw manifests only. Private repository import should be added through a trusted GitHub App or OIDC-backed workflow, not by passing long-lived GitHub tokens in ad hoc operator requests.
 
 See [Module CI/CD Model](./module-ci-cd.md) for the full pipeline model.
 
