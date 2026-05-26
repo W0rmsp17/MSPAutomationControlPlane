@@ -12,6 +12,16 @@ public sealed class ModuleRegistryService(
     IOperatorContext operatorContext,
     HttpClient httpClient)
 {
+    private static readonly HashSet<string> MovingRefs = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "main",
+        "master",
+        "develop",
+        "dev",
+        "trunk",
+        "HEAD"
+    };
+
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
         Converters = { new JsonStringEnumConverter() }
@@ -57,6 +67,12 @@ public sealed class ModuleRegistryService(
         ModuleImportRequest importRequest,
         CancellationToken cancellationToken)
     {
+        var importValidation = ValidateImportRequest(importRequest);
+        if (importValidation.Count > 0)
+        {
+            return Result<ModuleRegistration>.Failure(importValidation);
+        }
+
         var manifestUri = BuildManifestUri(importRequest.Source);
         if (manifestUri is null)
         {
@@ -86,6 +102,23 @@ public sealed class ModuleRegistryService(
         }
 
         return await RegisterAsync(manifest, cancellationToken);
+    }
+
+    private static IReadOnlyList<string> ValidateImportRequest(ModuleImportRequest importRequest)
+    {
+        var errors = new List<string>();
+        var source = importRequest.Source;
+
+        if (string.Equals(source.Type, "git", StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrWhiteSpace(source.ManifestUrl))
+        {
+            if (MovingRefs.Contains(source.Ref) && !importRequest.Validation.AllowMovingRef)
+            {
+                errors.Add("Git module imports must use an immutable release tag or commit SHA. Moving refs such as main, master, develop, dev, trunk, and HEAD are rejected unless validation.allowMovingRef is true.");
+            }
+        }
+
+        return errors;
     }
 
     public Task<IReadOnlyList<ModuleRegistration>> ListAsync(CancellationToken cancellationToken)

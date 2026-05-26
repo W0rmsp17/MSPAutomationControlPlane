@@ -28,7 +28,8 @@ Repository import flow:
 
 ```text
 POST /api/modules/import
-  -> Fetch module.manifest.json from a trusted repository ref or manifest URL
+  -> Reject moving branch refs unless explicitly allowed
+  -> Fetch module.manifest.json from a pinned repository ref or manifest URL
   -> Validate module manifest
   -> Check module ID and version uniqueness
   -> Store registered module
@@ -99,6 +100,11 @@ Both paths converge on `POST /api/modules`. The control plane validates the mani
 
 For the released account-management report module, see `samples/import-account-management-report-module.json`.
 
+Repository import does not mean the MSP tenant blindly trusts Git.
+The control plane should trust only a validated, pinned, operator-approved module registration.
+Imports from moving refs such as `main`, `master`, `develop`, `dev`, `trunk`, or `HEAD` are rejected by default.
+Use release tags or commit SHAs for repeatable imports.
+
 See [Module CI/CD Model](./module-ci-cd.md) for the full pipeline model.
 
 ## Validation Rules
@@ -119,6 +125,7 @@ Initial checks:
 - `requiredPermissions` declares at least one permission.
 - Required permission entries include provider, permission, and type.
 - Required permission type is `Application` or `Delegated`.
+- Repository import refs are immutable release tags or commit SHAs unless moving refs are explicitly allowed for development.
 - Approval policy is valid.
 
 Validation failures return a `400` response with an `errors` array so operators can correct all obvious manifest issues in one pass.

@@ -38,4 +38,6 @@ public sealed class ModuleImportValidationOptions
     public bool RequireImageTagMatch { get; init; } = true;
 
     public bool RequirePackageValidation { get; init; } = true;
+
+    public bool AllowMovingRef { get; init; }
 }
