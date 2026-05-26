@@ -84,6 +84,16 @@ ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.0
 
 After publish, the workflow uploads the module manifest and image digest as an artifact. The control plane registers the manifest image reference; future hardening should prefer digest-pinned image references.
 
+For the simplest lab test, make the GHCR package public after the first publish so Container Apps can pull the module image without registry credentials. For a private registry, set the Terraform variables:
+
+```hcl
+container_registry_server   = "ghcr.io"
+container_registry_username = "<github-username>"
+container_registry_password = "<classic-pat-or-fine-grained-token-with-package-read>"
+```
+
+The password is marked sensitive and is stored as a Container Apps Job secret.
+
 ## Security Boundary
 
 The design intentionally separates responsibilities:

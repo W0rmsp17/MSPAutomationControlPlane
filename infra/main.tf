@@ -31,6 +31,11 @@ locals {
   normalized_prefix = lower(replace(var.name_prefix, "-", ""))
   suffix            = random_string.suffix.result
   resource_suffix   = "${var.environment_name}-${local.suffix}"
+  use_private_registry = (
+    var.container_registry_server != "" &&
+    var.container_registry_username != "" &&
+    var.container_registry_password != ""
+  )
 
   tags = merge(
     {
@@ -243,6 +248,25 @@ resource "azurerm_container_app_job" "module_worker" {
   manual_trigger_config {
     parallelism              = 1
     replica_completion_count = 1
+  }
+
+  dynamic "secret" {
+    for_each = local.use_private_registry ? [1] : []
+
+    content {
+      name  = "module-registry-password"
+      value = var.container_registry_password
+    }
+  }
+
+  dynamic "registry" {
+    for_each = local.use_private_registry ? [1] : []
+
+    content {
+      server               = var.container_registry_server
+      username             = var.container_registry_username
+      password_secret_name = "module-registry-password"
+    }
   }
 
   template {

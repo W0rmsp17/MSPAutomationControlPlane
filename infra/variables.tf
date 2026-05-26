@@ -110,6 +110,25 @@ variable "container_job_replica_retry_limit" {
   default     = 0
 }
 
+variable "container_registry_server" {
+  description = "Optional private container registry server for module images, such as ghcr.io."
+  type        = string
+  default     = ""
+}
+
+variable "container_registry_username" {
+  description = "Optional private container registry username."
+  type        = string
+  default     = ""
+}
+
+variable "container_registry_password" {
+  description = "Optional private container registry password or token."
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
 variable "log_retention_days" {
   description = "Log Analytics retention in days."
   type        = number
