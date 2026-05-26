@@ -39,6 +39,7 @@
 - Prove the job input and output contract.
 - Prove tenant-scope and user-scope execution payloads.
 - Store run history and job events.
+- Attach module output to the job record for UI/API inspection.
 
 ## Phase 4: Container Apps Job Execution
 

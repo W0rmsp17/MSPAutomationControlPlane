@@ -20,6 +20,8 @@ public sealed class JobRecord
 
     public JobStatus Status { get; set; }
 
+    public JsonElement? Output { get; set; }
+
     public DateTimeOffset CreatedAt { get; init; }
 
     public DateTimeOffset UpdatedAt { get; set; }

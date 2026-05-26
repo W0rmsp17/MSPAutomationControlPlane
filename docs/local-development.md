@@ -56,6 +56,18 @@ Local development also defaults to the in-memory queue:
 "ControlPlane__QueueProvider": "InMemory"
 ```
 
+Local development can run sample modules through the file-based module contract:
+
+```json
+"ControlPlane__LocalModules__Enabled": "true",
+"ControlPlane__LocalModules__Root": "",
+"ControlPlane__LocalModules__WorkRoot": ""
+```
+
+When enabled, local dispatch looks for a matching project under `modules/<module-id>/src/<PascalCaseModuleId>`. For `tenant-health-check`, the dispatcher writes the standard job input to `.work/local-modules/<job-id>/input/job.json`, runs the module with `dotnet run`, reads `.work/local-modules/<job-id>/output/result.json`, and stores the output on the job record.
+
+If no local module project is found, dispatch falls back to the simulated worker path. Deployed Azure environments leave local module execution disabled and will use the simulated path until Container Apps Jobs are wired.
+
 Deployed environments can use Service Bus by setting:
 
 ```json
@@ -159,12 +171,18 @@ Dispatch the next queued local job:
 Invoke-RestMethod -Uri 'http://localhost:7071/api/local/dispatch-next' -Method Post
 ```
 
+After dispatch, load the job again to inspect the module output:
+
+```powershell
+Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}' -Method Get
+```
+
 ## Current MVP Limits
 
 - Data is stored in memory and disappears when the Function App restarts.
 - Operator identity is stubbed as `operator@local.dev`.
 - Job dispatch is queued into an in-memory queue.
-- Local dispatch simulates worker execution and marks the job as `Succeeded`.
+- Local dispatch runs a matching sample module when available; otherwise it simulates worker execution and marks the job as `Succeeded`.
 - Service Bus dispatch uses the same `JobDispatcher` service when `ControlPlane__QueueProvider` is set to `ServiceBus`.
 - Container Apps Jobs are not wired yet.
 - Key Vault is not wired yet.
