@@ -2,9 +2,69 @@
 
 A lightweight Azure control plane for running repeatable MSP automation modules across client environments.
 
-The goal is to provide a portable, low-cost, API-driven platform where automation "snap-ins" can be added without rebuilding the core application. Each snap-in should declare what it needs, accept a standard job payload, run in an isolated worker, and return structured results that the control plane can audit and display.
+The project is designed for MSP scenarios where useful automations exist, but each one usually needs its own credentials, tenant targeting, logging, approval process, and run history. This control plane standardises those platform concerns so new automations can be added as isolated snap-in modules.
+
+The goal is to provide a portable, low-cost, API-driven platform where automation modules can be added without rebuilding the core application. Each module declares what it needs, accepts a standard job payload, runs in an isolated worker, and returns structured results that the control plane can audit and display.
 
 This repository focuses on the control plane itself: deployment, API, orchestration, tenant/client registry, target scoping, identity/secret brokering, queueing, audit, and module registration. Business-specific automation modules can be built as separate projects that plug into the platform contract.
+
+## What This Demonstrates
+
+- Serverless-first Azure architecture with Terraform deployment.
+- Central MSP-hosted management plane with explicit client tenant boundaries.
+- Microsoft Entra protected operator UI and Function API.
+- Queue-based orchestration using Service Bus.
+- Container Apps Jobs for isolated snap-in automation execution.
+- Table/Blob storage for durable state, audit history, and structured module output.
+- Repeatable module contract that supports CI/CD-produced container images.
+- A live cloud smoke test proving the full request-to-result path.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Operator[MSP operator] --> SWA[Static Web App]
+    SWA -->|MSAL access token| API[Azure Functions API]
+    API --> Tables[(Table Storage)]
+    API --> Queue[Service Bus queue]
+    API --> Blob[(Blob artifacts)]
+    API --> KV[Key Vault]
+    Queue --> Dispatcher[Service Bus-triggered Function]
+    Dispatcher --> ACA[Container Apps Job]
+    ACA --> Blob
+    ACA --> Client[Client tenant APIs]
+    Client --> Graph[Microsoft Graph / Azure APIs]
+```
+
+The control plane is hosted centrally in the MSP Azure environment. Client tenants are represented by `ClientConnection` records that describe tenant ID, execution identity, allowed modules, allowed scopes, permissions, and readiness state.
+
+## Validated Flow
+
+The current cloud smoke test validates this path:
+
+```text
+Authenticated operator
+  -> Register/reuse client connection
+  -> Register/reuse module manifest
+  -> Submit job
+  -> Queue dispatch message
+  -> Start Container Apps Job
+  -> Module writes structured output to Blob Storage
+  -> API collects output
+  -> Job marked Succeeded
+```
+
+The validated job lifecycle is:
+
+```text
+Queued -> Running -> Succeeded
+```
+
+Run it with:
+
+```powershell
+.\scripts\test-cloud-smoke.ps1
+```
 
 ## Problem Statement
 
@@ -66,8 +126,6 @@ In this model, the control plane is a set of focused functions:
 - Callback functions for snap-in job completion.
 
 Functions wake up for a specific event, read and update shared platform state, call the required Azure service, then finish. Durable state lives in Table Storage, Blob Storage, Key Vault, and Service Bus rather than in a long-running process.
-
-The current ASP.NET Core scaffold is transitional and should be replaced with a .NET isolated Azure Functions project before implementation begins.
 
 ## Deployment Direction
 
@@ -173,6 +231,46 @@ Good first modules:
 
 The health check module should come first because it proves the control plane can register a module, submit a job, run a container, collect output, and display history before any real business logic is added.
 
+Next planned business-value module:
+
+- MSP account-management report covering tenant overview, license usage, unused licenses, cost indicators, and notable governance findings.
+
+That module is intentionally separate from the control plane. It should plug into the same manifest, readiness, job, and output contract.
+
+## Demo Walkthrough
+
+Recommended demo path:
+
+1. Open the protected management UI and complete Microsoft Entra sign-in.
+2. Review the client connection and readiness state.
+3. Review the registered `tenant-health-check` module manifest.
+4. Compose a job using the guided job form.
+5. Run readiness check before submission.
+6. Submit the job and observe it move from `Queued` to `Running`.
+7. Collect the result and review structured output.
+8. Open audit history to show who requested the job and when.
+
+For a portfolio README, short GIFs work well for the UI flow. A separate 3-5 minute screen recording can explain the MSP business problem, architecture, security model, and validated job lifecycle.
+
+## Cost And Security Notes
+
+The MVP is intentionally low-idle-cost:
+
+- Azure Functions runs the API and event handlers.
+- Static Web Apps hosts the frontend.
+- Service Bus decouples job submission from execution.
+- Container Apps Jobs run only when a module job starts.
+- Table Storage and Blob Storage provide inexpensive durable state and artifacts.
+
+Security boundaries:
+
+- Operators authenticate through Microsoft Entra.
+- API calls require bearer tokens for the configured API scope.
+- Operator access can be limited by user object ID, group object ID, or app role.
+- Client tenant execution is represented by explicit non-secret connection records.
+- Secrets and certificates are referenced through Key Vault locations, not embedded in job payloads.
+- Readiness checks block jobs when a client is disabled, missing permissions, missing admin consent, not ready, or not allowed to run the selected module/scope.
+
 ## Repository Status
 
 This repository now has a deployable MVP foundation:
@@ -200,4 +298,5 @@ The current cloud smoke test validates the protected API, Service Bus dispatch, 
 - [Module contract](docs/module-contract.md)
 - [Module CI/CD model](docs/module-ci-cd.md)
 - [Cloud smoke test](docs/cloud-smoke-test.md)
+- [Demo guide](docs/demo-guide.md)
 - [Architecture risk register](docs/risk-register.md)
