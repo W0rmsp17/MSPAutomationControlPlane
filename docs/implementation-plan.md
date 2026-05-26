@@ -40,10 +40,12 @@
 - Prove tenant-scope and user-scope execution payloads.
 - Store run history and job events.
 - Attach module output to the job record for UI/API inspection.
+- Introduce a module execution provider boundary so local, simulated, and Azure execution can share the same dispatch flow.
 
 ## Phase 4: Container Apps Job Execution
 
 - Add Terraform for Container Apps Environment.
+- Add Container Apps execution provider implementation.
 - Add Container Apps Job definition.
 - Add worker image build and publish steps through CI/CD.
 - Add Service Bus-triggered Function to dispatch queued jobs.

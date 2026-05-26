@@ -5,7 +5,7 @@ namespace MSPAutomationControlPlane.Services;
 
 public sealed class JobDispatcher(
     IJobRepository jobRepository,
-    LocalModuleRunner localModuleRunner,
+    IModuleExecutionProvider moduleExecutionProvider,
     AuditService auditService)
 {
     public async Task<Result<JobRecord>> DispatchAsync(
@@ -24,33 +24,28 @@ public sealed class JobDispatcher(
         job.UpdatedAt = now;
         job.Events.Add(new JobEvent("DispatchStarted", now, "Dispatcher picked up the job.", actor));
 
-        var moduleRun = await localModuleRunner.TryRunAsync(job, actor, cancellationToken);
+        var execution = await moduleExecutionProvider.ExecuteAsync(job, actor, cancellationToken);
         var completedAt = DateTimeOffset.UtcNow;
 
-        if (moduleRun.ExitCode == -1)
+        if (execution.SkipMessage is not null)
         {
-            job.Events.Add(new JobEvent("WorkerSkipped", completedAt, moduleRun.Message, actor));
-            job.Events.Add(new JobEvent("WorkerStarted", completedAt, "Simulated worker started.", actor));
-            job.Status = JobStatus.Succeeded;
-            job.UpdatedAt = completedAt;
-            job.Events.Add(new JobEvent("Succeeded", completedAt, "Simulated worker completed successfully.", actor));
+            job.Events.Add(new JobEvent("WorkerSkipped", completedAt, execution.SkipMessage, actor));
         }
-        else if (moduleRun.Succeeded && moduleRun.Output is not null)
+
+        job.Events.Add(new JobEvent("WorkerStarted", now, execution.StartMessage, actor));
+        if (execution.Succeeded)
         {
-            job.Output = moduleRun.Output;
+            job.Output = execution.Output;
             job.Status = JobStatus.Succeeded;
-            job.UpdatedAt = completedAt;
-            job.Events.Add(new JobEvent("WorkerStarted", now, "Local module worker started.", actor));
-            job.Events.Add(new JobEvent("Succeeded", completedAt, "Local module worker completed successfully.", actor));
+            job.Events.Add(new JobEvent("Succeeded", completedAt, execution.CompletionMessage, actor));
         }
         else
         {
             job.Status = JobStatus.Failed;
-            job.UpdatedAt = completedAt;
-            job.Events.Add(new JobEvent("WorkerStarted", now, "Local module worker started.", actor));
-            job.Events.Add(new JobEvent("Failed", completedAt, moduleRun.Message, actor));
+            job.Events.Add(new JobEvent("Failed", completedAt, execution.CompletionMessage, actor));
         }
 
+        job.UpdatedAt = completedAt;
         await jobRepository.UpdateAsync(job, cancellationToken);
         await auditService.WriteAsync(
             job.Status == JobStatus.Succeeded ? AuditEventType.JobCompleted : AuditEventType.JobFailed,
