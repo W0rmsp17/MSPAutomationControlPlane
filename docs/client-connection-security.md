@@ -74,7 +74,7 @@ The app registration, certificate, managed identity, or delegated identity used 
 Audit event example:
 
 ```text
-Operator: chris@msp.example
+Operator: operator@msp.example
 Client tenant: Contoso
 Execution identity: app-client-id-for-contoso
 Module: tenant-health-check v0.1.1

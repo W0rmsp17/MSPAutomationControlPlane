@@ -31,7 +31,7 @@ Example subscription:
 ```json
 {
   "name": "MSP Ops Teams Workflow",
-  "url": "https://prod-00.australiaeast.logic.azure.com/workflows/example",
+  "url": "https://example.invalid/workflows/example",
   "eventTypes": [
     "JobFailed",
     "ApprovalRequired",

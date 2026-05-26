@@ -197,7 +197,7 @@ Invoke-RestMethod -Uri 'http://localhost:7071/api/jobs/{jobId}/collect-result' -
 ## Current MVP Limits
 
 - Data is stored in memory and disappears when the Function App restarts.
-- Operator identity is stubbed as `operator@local.dev`.
+- Deployed environments record the signed-in MSP operator from the validated Entra token. Local unauthenticated development uses the fallback `system` operator.
 - Job dispatch is queued into an in-memory queue.
 - Local dispatch runs a matching sample module when available; otherwise it simulates worker execution and marks the job as `Succeeded`.
 - Service Bus dispatch uses the same `JobDispatcher` service when `ControlPlane__QueueProvider` is set to `ServiceBus`.
