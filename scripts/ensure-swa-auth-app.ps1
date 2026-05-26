@@ -79,6 +79,21 @@ else {
     Write-Host "Created app registration: $($app.appId)"
 }
 
+$existingServicePrincipal = & az ad sp show --id $app.appId --output json 2>$null
+if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace($existingServicePrincipal)) {
+    Write-Host "Using existing enterprise application/service principal: $($app.appId)"
+}
+else {
+    Invoke-JsonCommand -Arguments @(
+        "ad",
+        "sp",
+        "create",
+        "--id",
+        $app.appId
+    ) | Out-Null
+    Write-Host "Created enterprise application/service principal: $($app.appId)"
+}
+
 Invoke-JsonCommand -Arguments @(
     "ad",
     "app",

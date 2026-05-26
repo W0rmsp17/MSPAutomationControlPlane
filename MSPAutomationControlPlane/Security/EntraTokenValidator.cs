@@ -8,6 +8,18 @@ namespace MSPAutomationControlPlane.Security;
 
 public sealed class EntraTokenValidator
 {
+    private static readonly string[] ScopeClaimTypes =
+    [
+        "scp",
+        "http://schemas.microsoft.com/identity/claims/scope"
+    ];
+
+    private static readonly string[] UserObjectIdClaimTypes =
+    [
+        "oid",
+        "http://schemas.microsoft.com/identity/claims/objectidentifier"
+    ];
+
     private readonly ControlPlaneAuthOptions options;
     private readonly ConfigurationManager<OpenIdConnectConfiguration>? configurationManager;
     private readonly JwtSecurityTokenHandler tokenHandler = new();
@@ -93,7 +105,8 @@ public sealed class EntraTokenValidator
             return true;
         }
 
-        return principal.FindAll("scp")
+        return ScopeClaimTypes
+            .SelectMany(principal.FindAll)
             .SelectMany(claim => claim.Value.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
             .Contains(options.RequiredScope, StringComparer.OrdinalIgnoreCase);
     }
@@ -105,8 +118,11 @@ public sealed class EntraTokenValidator
             return true;
         }
 
-        var userObjectId = principal.FindFirstValue("oid");
-        if (!string.IsNullOrWhiteSpace(userObjectId) && options.AllowedUserObjectIds.Contains(userObjectId))
+        var userObjectIds = UserObjectIdClaimTypes
+            .Select(principal.FindFirstValue)
+            .Where(value => !string.IsNullOrWhiteSpace(value));
+
+        if (userObjectIds.Any(value => options.AllowedUserObjectIds.Contains(value!)))
         {
             return true;
         }

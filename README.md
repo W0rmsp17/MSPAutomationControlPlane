@@ -116,7 +116,7 @@ If Container Apps is used for worker execution, the Azure subscription must have
 az provider register --namespace Microsoft.App
 ```
 
-The Static Web App is configured for Microsoft Entra sign-in against the MSP tenant. `ensure-swa-auth-app.ps1` also exposes an API scope on the same app registration and configures the Function App to validate MSP-tenant bearer tokens. `deploy-frontend.ps1` injects the API base URL plus MSAL client settings into the protected Static Web App package. By default, API access is limited to the signed-in implementor's Entra user object ID; additional allowed user IDs or group IDs can be passed to `ensure-swa-auth-app.ps1`.
+The Static Web App is configured for Microsoft Entra sign-in against the MSP tenant. `ensure-swa-auth-app.ps1` also exposes an API scope on the same app registration, ensures the matching Enterprise App/service principal exists, and configures the Function App to validate MSP-tenant bearer tokens. `deploy-frontend.ps1` injects the API base URL plus MSAL client settings into the protected Static Web App package. By default, API access is limited to the signed-in implementor's Entra user object ID; additional allowed user IDs or group IDs can be passed to `ensure-swa-auth-app.ps1`.
 
 The first browser launch after enabling the API scope may require a one-time Microsoft Entra consent prompt. In production, an MSP can assign access through an operator group and pass that group object ID during bootstrap:
 
