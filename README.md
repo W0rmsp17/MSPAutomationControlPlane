@@ -184,3 +184,11 @@ This repository now has a deployable MVP foundation:
 - Dual module intake model: manual manifest registration and CI/CD-produced module artifacts.
 
 The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.
+
+## Further Reading
+
+- [Architecture](docs/architecture.md)
+- [Deployment model](docs/deployment-model.md)
+- [Module contract](docs/module-contract.md)
+- [Module CI/CD model](docs/module-ci-cd.md)
+- [Architecture risk register](docs/risk-register.md)
