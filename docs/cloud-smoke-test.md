@@ -43,3 +43,28 @@ To test the module import endpoint separately, acquire an API token as above and
 ```
 
 The import sample fetches a public raw manifest from the pinned module release. If the module repository is private, use direct manifest registration for now or add a trusted GitHub App/OIDC import path before enabling private repository imports.
+
+## Account Report Module Smoke
+
+The account-management report module validates the common snap-in execution path:
+
+```text
+Import pinned module release
+  -> Submit job through authenticated Function API
+  -> Queue dispatch through Service Bus
+  -> Start Container Apps Job with module image
+  -> Pass CONTROL_PLANE_JOB_INPUT_BASE64
+  -> Pass CONTROL_PLANE_OUTPUT_BLOB_URI
+  -> Module writes result JSON to Blob Storage
+  -> API collects result and marks job Succeeded
+```
+
+When testing a private GHCR package, the Container Apps Job needs registry credentials before execution. A public repository does not automatically make the linked GHCR package public.
+
+For production, configure private registry credentials through Terraform and Key Vault-backed deployment inputs. For public portfolio modules, make the package public in GitHub package settings so the module image is anonymously pullable.
+
+Validated result shape:
+
+- Container Apps Job execution reached `Succeeded`.
+- Control-plane job reached `Succeeded` after result collection.
+- Output contained summary, findings, metrics, recommendations, license summary, user license signals, and rendered Markdown.

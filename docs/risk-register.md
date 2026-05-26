@@ -38,10 +38,21 @@ Risk:
 The control plane could run an untrusted or mutable container image.
 
 Current mitigation:
-Manifest validation only allows configured registry hostnames. CI/CD builds and publishes module images. Terraform supports private registries.
+Manifest validation only allows configured registry hostnames. CI/CD builds and publishes module images. Terraform supports private registries. Module import uses pinned release refs by default and rejects moving refs unless explicitly allowed.
 
 Remaining work:
 Prefer digest-pinned images, record image digest at module registration time, and optionally require trusted publisher metadata or image signing before a module can be enabled.
+
+### Registry Pull Trust
+
+Risk:
+A module repository may be public while its container package remains private, causing Container Apps executions to hang or fail before the module process starts.
+
+Current mitigation:
+Terraform supports registry credentials for private registries. The cloud smoke test confirmed that private GHCR packages require explicit Container Apps registry configuration.
+
+Remaining work:
+Make demo module packages public or formalize private registry credentials through Terraform and Key Vault-backed setup. Surface image-pull failures in job status rather than leaving jobs in `Running` until manual investigation.
 
 ### Result And Log Exfiltration
 

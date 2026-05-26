@@ -109,6 +109,43 @@ The MVP importer fetches public raw manifests only. Private repository import sh
 
 See [Module CI/CD Model](./module-ci-cd.md) for the full pipeline model.
 
+## Module Trust Model
+
+The control plane trusts release artifacts, not repository source code.
+
+Trust boundary:
+
+```text
+Git repository source
+  -> CI/CD tests and builds
+  -> Versioned container image
+  -> Versioned module manifest
+  -> Control-plane validation
+  -> Operator approval and client enablement
+  -> Runtime execution
+```
+
+The controller should not clone arbitrary source, build code, or execute files from Git. Git is a discovery and release metadata source only.
+
+Current supported trust controls:
+
+- Import manifests from immutable release tags or commit SHAs.
+- Reject moving refs by default.
+- Validate the module manifest before registration.
+- Require module ID and version uniqueness.
+- Allow only configured container registry hostnames.
+- Require explicit client connection readiness and module enablement before job submission.
+- Store module registrations and job state in the control plane.
+
+Recommended production hardening:
+
+- Record the image digest at registration time and execute by digest rather than mutable tag.
+- Add a GitHub App for private manifest imports with short-lived installation tokens.
+- Add an OIDC-based CI registration path where a trusted module pipeline calls the control-plane API after publishing.
+- Keep manual manifest registration as a fallback for disconnected or restricted environments.
+- Prefer public images for public demo modules and managed private registry credentials for private MSP modules.
+- Store private registry credentials in Key Vault or Terraform-managed secrets, not in ad hoc scripts.
+
 ## Validation Rules
 
 The control plane should reject unsafe or invalid module registrations.
