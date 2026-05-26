@@ -35,11 +35,11 @@ dotnet run --project .\src\TenantHealthCheck\TenantHealthCheck.csproj
 ## Container Build
 
 ```powershell
-docker build -t tenant-health-check:0.1.0 .
+docker build -t tenant-health-check:0.1.1 .
 ```
 
 The manifest image reference is intended for GitHub Container Registry once publish is enabled:
 
 ```text
-ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.0
+ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.1
 ```

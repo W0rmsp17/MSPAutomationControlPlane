@@ -11,7 +11,7 @@ public sealed class TenantHealthCheckRunnerTests
         {
             JobId = "job-test",
             ModuleId = "tenant-health-check",
-            ModuleVersion = "0.1.0",
+            ModuleVersion = "0.1.1",
             ClientConnectionId = "client-contoso",
             RequestedBy = new RequestedBy
             {

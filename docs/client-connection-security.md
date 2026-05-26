@@ -77,7 +77,7 @@ Audit event example:
 Operator: chris@msp.example
 Client tenant: Contoso
 Execution identity: app-client-id-for-contoso
-Module: tenant-health-check v0.1.0
+Module: tenant-health-check v0.1.1
 Target scope: Users
 Targets: alex.example@contoso.com
 Status: Queued

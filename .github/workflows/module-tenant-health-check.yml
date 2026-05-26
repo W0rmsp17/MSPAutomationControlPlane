@@ -23,7 +23,7 @@ jobs:
 
     env:
       MODULE_PATH: modules/tenant-health-check
-      MODULE_VERSION: 0.1.0
+      MODULE_VERSION: 0.1.1
 
     steps:
       - name: Checkout

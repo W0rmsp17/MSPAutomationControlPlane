@@ -2,7 +2,7 @@
   "schemaVersion": "1.0",
   "jobId": "job-local-tenant-health-check",
   "moduleId": "tenant-health-check",
-  "moduleVersion": "0.1.0",
+  "moduleVersion": "0.1.1",
   "requestedBy": {
     "userId": "operator-id",
     "displayName": "Operator",

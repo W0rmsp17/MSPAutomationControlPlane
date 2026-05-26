@@ -7,8 +7,7 @@ RUN dotnet restore src/TenantHealthCheck/TenantHealthCheck.csproj
 COPY src/TenantHealthCheck/ src/TenantHealthCheck/
 RUN dotnet publish src/TenantHealthCheck/TenantHealthCheck.csproj \
     --configuration Release \
-    --output /app/publish \
-    --no-restore
+    --output /app/publish
 
 FROM mcr.microsoft.com/dotnet/runtime:8.0
 WORKDIR /app

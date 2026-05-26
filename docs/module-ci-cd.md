@@ -79,7 +79,7 @@ The in-repo `tenant-health-check` workflow publishes when either:
 The current image tag is:
 
 ```text
-ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.0
+ghcr.io/w0rmsp17/mspautomationcontrolplane/tenant-health-check:0.1.1
 ```
 
 After publish, the workflow uploads the module manifest and image digest as an artifact. The control plane registers the manifest image reference; future hardening should prefer digest-pinned image references.

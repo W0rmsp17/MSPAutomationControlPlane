@@ -1,6 +1,6 @@
 {
   "moduleId": "tenant-health-check",
-  "moduleVersion": "0.1.0",
+  "moduleVersion": "0.1.1",
   "clientConnectionId": "client-contoso",
   "targetScope": {
     "type": "Users",
