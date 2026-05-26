@@ -18,7 +18,8 @@ var host = new HostBuilder()
         services.AddSingleton<ModuleManifestValidator>();
         services.AddSingleton(LocalModuleRunnerOptions.FromEnvironment());
         services.AddSingleton<LocalModuleRunner>();
-        services.AddSingleton<IModuleExecutionProvider, LocalOrSimulatedModuleExecutionProvider>();
+        services.AddSingleton(ExecutionProviderOptions.FromEnvironment());
+        services.AddSingleton<HttpClient>();
 
         var repositoryProvider = Environment.GetEnvironmentVariable("ControlPlane__RepositoryProvider");
         if (string.Equals(repositoryProvider, "TableStorage", StringComparison.OrdinalIgnoreCase))
@@ -57,6 +58,19 @@ var host = new HostBuilder()
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
         services.AddSingleton<JobService>();
+        services.AddSingleton<IModuleExecutionProvider>(provider =>
+        {
+            var options = provider.GetRequiredService<ExecutionProviderOptions>();
+            if (string.Equals(options.Provider, "ContainerApps", StringComparison.OrdinalIgnoreCase))
+            {
+                return new ContainerAppsModuleExecutionProvider(
+                    ContainerAppsExecutionOptions.FromEnvironment(),
+                    provider.GetRequiredService<IModuleRepository>(),
+                    provider.GetRequiredService<HttpClient>());
+            }
+
+            return new LocalOrSimulatedModuleExecutionProvider(provider.GetRequiredService<LocalModuleRunner>());
+        });
         services.AddSingleton<JobDispatcher>();
         services.AddSingleton<LocalJobDispatcher>();
     })

@@ -168,19 +168,26 @@ resource "azurerm_windows_function_app" "control_api" {
   }
 
   app_settings = {
-    FUNCTIONS_WORKER_RUNTIME                 = "dotnet-isolated"
-    WEBSITE_RUN_FROM_PACKAGE                 = "1"
-    ControlPlane__RepositoryProvider         = "TableStorage"
-    ControlPlane__StorageConnectionString    = azurerm_storage_account.main.primary_connection_string
-    ControlPlane__TablePrefix                = var.table_prefix
-    ControlPlane__Modules__AllowedRegistries = join(",", var.allowed_module_registries)
-    ControlPlane__QueueProvider              = "ServiceBus"
-    ControlPlane__ServiceBusConnectionString = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
-    ControlPlane__JobQueueName               = azurerm_servicebus_queue.jobs.name
-    ServiceBusConnection                     = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
-    ServiceBusJobQueueName                   = azurerm_servicebus_queue.jobs.name
-    Artifacts__ContainerName                 = azurerm_storage_container.artifacts.name
-    KeyVault__Uri                            = azurerm_key_vault.main.vault_uri
+    FUNCTIONS_WORKER_RUNTIME                       = "dotnet-isolated"
+    WEBSITE_RUN_FROM_PACKAGE                       = "1"
+    ControlPlane__RepositoryProvider               = "TableStorage"
+    ControlPlane__StorageConnectionString          = azurerm_storage_account.main.primary_connection_string
+    ControlPlane__TablePrefix                      = var.table_prefix
+    ControlPlane__Modules__AllowedRegistries       = join(",", var.allowed_module_registries)
+    ControlPlane__ExecutionProvider                = var.execution_provider
+    ControlPlane__ContainerApps__SubscriptionId    = var.subscription_id
+    ControlPlane__ContainerApps__ResourceGroupName = azurerm_resource_group.main.name
+    ControlPlane__ContainerApps__JobName           = azurerm_container_app_job.module_worker.name
+    ControlPlane__ContainerApps__ContainerName     = "module-worker"
+    ControlPlane__ContainerApps__Cpu               = tostring(var.container_job_cpu)
+    ControlPlane__ContainerApps__Memory            = var.container_job_memory
+    ControlPlane__QueueProvider                    = "ServiceBus"
+    ControlPlane__ServiceBusConnectionString       = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
+    ControlPlane__JobQueueName                     = azurerm_servicebus_queue.jobs.name
+    ServiceBusConnection                           = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
+    ServiceBusJobQueueName                         = azurerm_servicebus_queue.jobs.name
+    Artifacts__ContainerName                       = azurerm_storage_container.artifacts.name
+    KeyVault__Uri                                  = azurerm_key_vault.main.vault_uri
   }
 
   lifecycle {
@@ -217,4 +224,38 @@ resource "azurerm_container_app_environment" "workers" {
   resource_group_name        = azurerm_resource_group.main.name
   log_analytics_workspace_id = azurerm_log_analytics_workspace.main.id
   tags                       = local.tags
+}
+
+resource "azurerm_container_app_job" "module_worker" {
+  name                         = "caj-${var.name_prefix}-${local.resource_suffix}"
+  location                     = azurerm_resource_group.main.location
+  resource_group_name          = azurerm_resource_group.main.name
+  container_app_environment_id = azurerm_container_app_environment.workers.id
+  replica_timeout_in_seconds   = var.container_job_replica_timeout_seconds
+  replica_retry_limit          = var.container_job_replica_retry_limit
+  tags                         = local.tags
+
+  identity {
+    type = "SystemAssigned"
+  }
+
+  manual_trigger_config {
+    parallelism              = 1
+    replica_completion_count = 1
+  }
+
+  template {
+    container {
+      name   = "module-worker"
+      image  = var.container_job_placeholder_image
+      cpu    = var.container_job_cpu
+      memory = var.container_job_memory
+    }
+  }
+}
+
+resource "azurerm_role_assignment" "function_start_container_jobs" {
+  scope                = azurerm_container_app_job.module_worker.id
+  role_definition_name = "Contributor"
+  principal_id         = azurerm_windows_function_app.control_api.identity[0].principal_id
 }

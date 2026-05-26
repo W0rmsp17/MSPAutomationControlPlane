@@ -45,3 +45,7 @@ output "key_vault_uri" {
 output "container_app_environment_name" {
   value = azurerm_container_app_environment.workers.name
 }
+
+output "container_app_job_name" {
+  value = azurerm_container_app_job.module_worker.name
+}

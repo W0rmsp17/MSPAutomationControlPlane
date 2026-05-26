@@ -4,22 +4,20 @@ using TenantHealthCheck;
 
 var inputPath = Environment.GetEnvironmentVariable("CONTROL_PLANE_INPUT_PATH");
 var outputPath = Environment.GetEnvironmentVariable("CONTROL_PLANE_OUTPUT_PATH");
+var inputBase64 = Environment.GetEnvironmentVariable("CONTROL_PLANE_JOB_INPUT_BASE64");
 
-if (string.IsNullOrWhiteSpace(inputPath))
+if (string.IsNullOrWhiteSpace(inputPath) && string.IsNullOrWhiteSpace(inputBase64))
 {
-    Console.Error.WriteLine("CONTROL_PLANE_INPUT_PATH is required.");
+    Console.Error.WriteLine("CONTROL_PLANE_INPUT_PATH or CONTROL_PLANE_JOB_INPUT_BASE64 is required.");
     return 2;
-}
-
-if (string.IsNullOrWhiteSpace(outputPath))
-{
-    Console.Error.WriteLine("CONTROL_PLANE_OUTPUT_PATH is required.");
-    return 3;
 }
 
 try
 {
-    var inputJson = await File.ReadAllTextAsync(inputPath);
+    var inputJson = string.IsNullOrWhiteSpace(inputPath)
+        ? System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(inputBase64!))
+        : await File.ReadAllTextAsync(inputPath);
+
     var input = JsonSerializer.Deserialize<ModuleJobInput>(inputJson, ModuleJson.Options);
     if (input is null)
     {
@@ -30,6 +28,12 @@ try
     var output = TenantHealthCheckRunner.Run(input, DateTimeOffset.UtcNow);
     var outputJson = JsonSerializer.Serialize(output, ModuleJson.Options);
 
+    if (string.IsNullOrWhiteSpace(outputPath))
+    {
+        Console.WriteLine(outputJson);
+        return 0;
+    }
+
     var outputDirectory = Path.GetDirectoryName(outputPath);
     if (!string.IsNullOrWhiteSpace(outputDirectory))
     {
@@ -38,6 +42,11 @@ try
 
     await File.WriteAllTextAsync(outputPath, outputJson);
     return 0;
+}
+catch (FormatException ex)
+{
+    Console.Error.WriteLine($"CONTROL_PLANE_JOB_INPUT_BASE64 is not valid base64: {ex.Message}");
+    return 2;
 }
 catch (JsonException ex)
 {

@@ -74,6 +74,42 @@ variable "allowed_module_registries" {
   default     = ["ghcr.io", "mcr.microsoft.com"]
 }
 
+variable "execution_provider" {
+  description = "Module execution provider. Use LocalOrSimulated for labs until Container Apps result collection is configured."
+  type        = string
+  default     = "LocalOrSimulated"
+}
+
+variable "container_job_placeholder_image" {
+  description = "Placeholder image used by the reusable Container Apps Job definition. Real executions override this from the registered module manifest."
+  type        = string
+  default     = "mcr.microsoft.com/k8se/quickstart-jobs:latest"
+}
+
+variable "container_job_cpu" {
+  description = "Default CPU cores for module worker executions."
+  type        = number
+  default     = 0.25
+}
+
+variable "container_job_memory" {
+  description = "Default memory for module worker executions."
+  type        = string
+  default     = "0.5Gi"
+}
+
+variable "container_job_replica_timeout_seconds" {
+  description = "Maximum runtime in seconds for a Container Apps module worker replica."
+  type        = number
+  default     = 900
+}
+
+variable "container_job_replica_retry_limit" {
+  description = "Retry limit for Container Apps module worker replicas."
+  type        = number
+  default     = 0
+}
+
 variable "log_retention_days" {
   description = "Log Analytics retention in days."
   type        = number

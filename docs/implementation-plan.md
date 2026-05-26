@@ -47,6 +47,8 @@
 - Add Terraform for Container Apps Environment.
 - Add Container Apps execution provider implementation.
 - Add Container Apps Job definition.
+- Add managed identity permission for the Function App to start the Container Apps Job.
+- Add asynchronous job-start handling that leaves container executions in `Running`.
 - Add worker image build and publish steps through CI/CD.
 - Add Service Bus-triggered Function to dispatch queued jobs.
 - Capture output artifacts.

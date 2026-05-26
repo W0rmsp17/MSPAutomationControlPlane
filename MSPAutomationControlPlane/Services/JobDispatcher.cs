@@ -36,8 +36,16 @@ public sealed class JobDispatcher(
         if (execution.Succeeded)
         {
             job.Output = execution.Output;
-            job.Status = JobStatus.Succeeded;
-            job.Events.Add(new JobEvent("Succeeded", completedAt, execution.CompletionMessage, actor));
+            if (execution.IsTerminal)
+            {
+                job.Status = JobStatus.Succeeded;
+                job.Events.Add(new JobEvent("Succeeded", completedAt, execution.CompletionMessage, actor));
+            }
+            else
+            {
+                job.Status = JobStatus.Running;
+                job.Events.Add(new JobEvent("ExecutionStarted", completedAt, execution.CompletionMessage, actor));
+            }
         }
         else
         {
@@ -47,15 +55,19 @@ public sealed class JobDispatcher(
 
         job.UpdatedAt = completedAt;
         await jobRepository.UpdateAsync(job, cancellationToken);
-        await auditService.WriteAsync(
-            job.Status == JobStatus.Succeeded ? AuditEventType.JobCompleted : AuditEventType.JobFailed,
-            actor,
-            $"Job '{job.Id}' completed with status '{job.Status}'.",
-            cancellationToken,
-            clientConnectionId: job.TenantContext.ClientId,
-            moduleId: job.ModuleId,
-            jobId: job.Id,
-            resourceId: job.Id);
+
+        if (execution.IsTerminal)
+        {
+            await auditService.WriteAsync(
+                job.Status == JobStatus.Succeeded ? AuditEventType.JobCompleted : AuditEventType.JobFailed,
+                actor,
+                $"Job '{job.Id}' completed with status '{job.Status}'.",
+                cancellationToken,
+                clientConnectionId: job.TenantContext.ClientId,
+                moduleId: job.ModuleId,
+                jobId: job.Id,
+                resourceId: job.Id);
+        }
 
         return Result<JobRecord>.Success(job);
     }

@@ -6,12 +6,16 @@ It proves the module execution contract without calling a live tenant API yet. T
 
 ## Runtime Contract
 
-Required environment variables:
+Supported input environment variables:
 
 ```text
 CONTROL_PLANE_INPUT_PATH=/work/input/job.json
 CONTROL_PLANE_OUTPUT_PATH=/work/output/result.json
+CONTROL_PLANE_JOB_INPUT_BASE64=<base64 encoded job input JSON>
 ```
+
+For local file-based execution, use `CONTROL_PLANE_INPUT_PATH` and `CONTROL_PLANE_OUTPUT_PATH`.
+For Container Apps execution, the control plane can pass `CONTROL_PLANE_JOB_INPUT_BASE64`; when `CONTROL_PLANE_OUTPUT_PATH` is not set, the module writes the result JSON to stdout.
 
 Exit codes:
 
