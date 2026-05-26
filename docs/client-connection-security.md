@@ -163,8 +163,12 @@ Manual/pre-created app registration mode:
   -ClientConnectionId "client-contoso" `
   -DisplayName "Contoso" `
   -TenantId "<target-tenant-id>" `
+  -ExecutionAppClientId "<target-app-client-id>" `
+  -ServicePrincipalObjectId "<target-service-principal-object-id>" `
   -OutputPath ".\samples\client-connection-contoso.json"
 ```
+
+This path is useful when the target tenant administrator creates the app registration manually and supplies the resulting IDs to the MSP implementor.
 
 Automated target app registration mode:
 
@@ -180,3 +184,5 @@ az login --tenant <target-tenant-id>
 ```
 
 The automated path creates the target tenant application and service principal metadata only. Certificate credential creation, Key Vault import, and admin consent remain explicit follow-up steps until the production bootstrap pack is expanded.
+
+When `-OutputPath` is supplied, the helper also writes a `.next-steps.md` file beside the generated JSON. This companion file lists the remaining target tenant and MSP Key Vault actions required before the connection should be marked `Ready`.
