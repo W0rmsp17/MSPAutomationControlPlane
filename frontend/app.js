@@ -393,6 +393,53 @@ function renderClientPreview() {
   target.classList.remove("hidden");
 }
 
+function readinessRequestFromJobPayload(payload) {
+  return {
+    clientConnectionId: payload.clientConnectionId,
+    moduleId: payload.moduleId,
+    moduleVersion: payload.moduleVersion,
+    targetScopeType: payload.targetScope?.type
+  };
+}
+
+function renderReadinessResult(result) {
+  const target = el("job-readiness");
+  target.innerHTML = "";
+
+  const rows = [
+    ["Status", result.isReady ? "Ready" : "Blocked"],
+    ["Client", result.clientConnectionId || "Not set"],
+    ["Module", `${result.moduleId || "Not set"} ${result.moduleVersion || ""}`.trim()],
+    ["Scope", result.targetScopeType || "Not checked"],
+    ["Permissions", `${result.matchingPermissions?.length || 0}/${result.requiredPermissions?.length || 0} matched`]
+  ];
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "preview-row";
+
+    const labelNode = document.createElement("span");
+    labelNode.textContent = label;
+
+    const valueNode = document.createElement("strong");
+    valueNode.textContent = value;
+
+    row.appendChild(labelNode);
+    row.appendChild(valueNode);
+    target.appendChild(row);
+  });
+
+  const issues = [...(result.blockingIssues || []), ...(result.warnings || [])];
+  issues.forEach((issue) => {
+    const item = document.createElement("div");
+    item.className = "meta";
+    item.textContent = issue;
+    target.appendChild(item);
+  });
+
+  target.classList.remove("hidden");
+}
+
 function renderTimeline(targetId, events) {
   const sorted = [...events].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)));
   renderList(targetId, sorted.slice(0, 25), (event) => {
@@ -573,6 +620,20 @@ function wireForms() {
       renderJobResult(result);
       el("job-output").textContent = pretty(result);
       setMessage("Job submitted.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("check-job-readiness-button").addEventListener("click", async () => {
+    try {
+      const payload = JSON.parse(el("job-json").value);
+      const result = await api("readiness/check", {
+        method: "POST",
+        body: JSON.stringify(readinessRequestFromJobPayload(payload))
+      });
+      renderReadinessResult(result);
+      setMessage(result.isReady ? "Job readiness check passed." : "Job readiness check found blockers.", result.isReady ? "ok" : "warn");
     } catch (error) {
       setMessage(error.message, "bad");
     }

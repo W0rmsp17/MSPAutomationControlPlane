@@ -102,6 +102,7 @@ GET  /api/modules
 POST /api/notification-subscriptions
 GET  /api/notification-subscriptions
 DELETE /api/notification-subscriptions/{id}
+POST /api/readiness/check
 POST /api/jobs
 GET  /api/jobs
 GET  /api/jobs/{id}

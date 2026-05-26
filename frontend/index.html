@@ -147,7 +147,11 @@
               </div>
               <label for="job-json">Job request JSON</label>
               <textarea id="job-json" spellcheck="false"></textarea>
-              <button class="button primary" type="submit">Submit job</button>
+              <div id="job-readiness" class="preview-box hidden"></div>
+              <div class="button-row">
+                <button id="check-job-readiness-button" class="button secondary" type="button">Check readiness</button>
+                <button class="button primary" type="submit">Submit job</button>
+              </div>
             </form>
           </div>
         </section>

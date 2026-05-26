@@ -132,6 +132,8 @@ Before a module can run for a client, the control plane should compare:
 
 The management interface should show whether a module is ready for a client before an operator submits a job.
 
+The MVP exposes `POST /api/readiness/check` for this comparison. Job submission uses the same readiness service, so a client that is disabled, not `Ready`, missing permissions, missing admin consent, not enabled for a module, or blocked by scope compatibility cannot run the job.
+
 ## Bootstrap Output
 
 Target tenant bootstrap should produce a non-secret connection record that can be registered with the MSP control plane:

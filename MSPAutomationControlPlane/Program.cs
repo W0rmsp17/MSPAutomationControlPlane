@@ -58,6 +58,7 @@ var host = new HostBuilder()
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
+        services.AddSingleton<ReadinessService>();
         services.AddSingleton<JobService>();
         services.AddSingleton<JobResultCollector>();
         services.AddSingleton<IModuleExecutionProvider>(provider =>

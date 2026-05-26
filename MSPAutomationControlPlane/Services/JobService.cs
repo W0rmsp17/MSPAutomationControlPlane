@@ -10,7 +10,8 @@ public sealed class JobService(
     IClientConnectionRepository clientConnectionRepository,
     IJobQueue jobQueue,
     AuditService auditService,
-    IOperatorContext operatorContext)
+    IOperatorContext operatorContext,
+    ReadinessService readinessService)
 {
     public async Task<Result<JobRecord>> SubmitAsync(
         SubmitJobRequest request,
@@ -31,28 +32,23 @@ public sealed class JobService(
             return Result<JobRecord>.Failure($"Client connection '{request.ClientConnectionId}' was not found.");
         }
 
-        if (!clientConnection.Enabled)
+        var readiness = await readinessService.CheckAsync(
+            new ReadinessCheckRequest
+            {
+                ClientConnectionId = request.ClientConnectionId,
+                ModuleId = request.ModuleId,
+                ModuleVersion = request.ModuleVersion,
+                TargetScopeType = request.TargetScope.Type
+            },
+            cancellationToken);
+        if (!readiness.Succeeded)
         {
-            return Result<JobRecord>.Failure($"Client connection '{request.ClientConnectionId}' is disabled.");
+            return Result<JobRecord>.Failure(readiness.Errors);
         }
 
-        if (clientConnection.EnabledModuleIds.Count > 0 &&
-            !clientConnection.EnabledModuleIds.Contains(module.Manifest.Id, StringComparer.OrdinalIgnoreCase))
+        if (!readiness.Value!.IsReady)
         {
-            return Result<JobRecord>.Failure(
-                $"Module '{module.Manifest.Id}' is not enabled for client connection '{clientConnection.Id}'.");
-        }
-
-        if (!module.Manifest.SupportedScopes.Contains(request.TargetScope.Type))
-        {
-            return Result<JobRecord>.Failure(
-                $"Module '{request.ModuleId}' does not support target scope '{request.TargetScope.Type}'.");
-        }
-
-        if (!clientConnection.AllowedScopes.Contains(request.TargetScope.Type))
-        {
-            return Result<JobRecord>.Failure(
-                $"Client connection '{clientConnection.Id}' does not allow target scope '{request.TargetScope.Type}'.");
+            return Result<JobRecord>.Failure(readiness.Value.BlockingIssues);
         }
 
         if (request.TargetScope.Mode == TargetScopeMode.Selected && request.TargetScope.Targets.Count == 0)
