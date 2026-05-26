@@ -90,7 +90,11 @@
               </div>
               <label for="client-json">Connection JSON</label>
               <textarea id="client-json" spellcheck="false"></textarea>
-              <button class="button primary" type="submit">Register client</button>
+              <div id="client-preview" class="preview-box hidden"></div>
+              <div class="button-row">
+                <button class="button primary" type="submit">Register client</button>
+                <button id="update-client-button" class="button secondary" type="button">Update client</button>
+              </div>
             </form>
           </div>
         </section>

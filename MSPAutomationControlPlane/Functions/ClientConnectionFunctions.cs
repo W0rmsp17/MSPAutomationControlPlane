@@ -37,4 +37,37 @@ public sealed class ClientConnectionFunctions(ClientConnectionService clientConn
         var connections = await clientConnectionService.ListAsync(cancellationToken);
         return await request.WriteJsonAsync(HttpStatusCode.OK, connections);
     }
+
+    [Function("GetClientConnection")]
+    public async Task<HttpResponseData> GetClientConnection(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "client-connections/{id}")] HttpRequestData request,
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var connection = await clientConnectionService.GetAsync(id, cancellationToken);
+        return connection is null
+            ? await request.WriteProblemAsync(HttpStatusCode.NotFound, $"Client connection '{id}' was not found.")
+            : await request.WriteJsonAsync(HttpStatusCode.OK, connection);
+    }
+
+    [Function("UpdateClientConnection")]
+    public async Task<HttpResponseData> UpdateClientConnection(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "client-connections/{id}")] HttpRequestData request,
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var clientConnection = await request.ReadJsonAsync<ClientConnection>(cancellationToken);
+        if (clientConnection is null)
+        {
+            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, "Request body is required.");
+        }
+
+        var result = await clientConnectionService.UpdateAsync(id, clientConnection, cancellationToken);
+        if (!result.Succeeded)
+        {
+            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, result.Error);
+        }
+
+        return await request.WriteJsonAsync(HttpStatusCode.OK, result.Value!);
+    }
 }

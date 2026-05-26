@@ -128,7 +128,8 @@ h2 {
 }
 
 .topbar-actions,
-.inline-form {
+.inline-form,
+.button-row {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -441,7 +442,8 @@ textarea {
 
   .topbar,
   .topbar-actions,
-  .inline-form {
+  .inline-form,
+  .button-row {
     align-items: stretch;
     flex-direction: column;
   }

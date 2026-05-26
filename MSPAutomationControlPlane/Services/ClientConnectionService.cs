@@ -42,6 +42,48 @@ public sealed class ClientConnectionService(
         return Result<ClientConnection>.Success(clientConnection);
     }
 
+    public async Task<Result<ClientConnection>> UpdateAsync(
+        string id,
+        ClientConnection request,
+        CancellationToken cancellationToken)
+    {
+        if (!string.Equals(id, request.Id, StringComparison.OrdinalIgnoreCase))
+        {
+            return Result<ClientConnection>.Failure("Route client connection id must match request body id.");
+        }
+
+        var validationError = Validate(request);
+        if (validationError is not null)
+        {
+            return Result<ClientConnection>.Failure(validationError);
+        }
+
+        var existing = await clientConnectionRepository.GetAsync(id, cancellationToken);
+        if (existing is null)
+        {
+            return Result<ClientConnection>.Failure($"Client connection '{id}' was not found.");
+        }
+
+        var clientConnection = request with
+        {
+            CreatedBy = existing.CreatedBy,
+            CreatedAt = existing.CreatedAt,
+            UpdatedBy = operatorContext.CurrentOperator,
+            UpdatedAt = DateTimeOffset.UtcNow
+        };
+
+        await clientConnectionRepository.UpdateAsync(clientConnection, cancellationToken);
+        await auditService.WriteAsync(
+            AuditEventType.ClientConnectionUpdated,
+            operatorContext.CurrentOperator,
+            $"Client connection '{clientConnection.Id}' was updated.",
+            cancellationToken,
+            clientConnectionId: clientConnection.Id,
+            resourceId: clientConnection.Id);
+
+        return Result<ClientConnection>.Success(clientConnection);
+    }
+
     public Task<ClientConnection?> GetAsync(string id, CancellationToken cancellationToken)
     {
         return clientConnectionRepository.GetAsync(id, cancellationToken);

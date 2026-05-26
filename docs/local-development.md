@@ -95,6 +95,8 @@ GET  /api/health
 GET  /api/audit-events
 POST /api/client-connections
 GET  /api/client-connections
+GET  /api/client-connections/{id}
+PUT  /api/client-connections/{id}
 POST /api/modules
 GET  /api/modules
 POST /api/notification-subscriptions

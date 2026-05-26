@@ -12,6 +12,11 @@ public sealed class TableStorageClientConnectionRepository(TableStorageOptions o
         return _store.UpsertAsync(PartitionKey, clientConnection.Id, clientConnection, cancellationToken);
     }
 
+    public Task UpdateAsync(ClientConnection clientConnection, CancellationToken cancellationToken)
+    {
+        return _store.UpsertAsync(PartitionKey, clientConnection.Id, clientConnection, cancellationToken);
+    }
+
     public Task<ClientConnection?> GetAsync(string id, CancellationToken cancellationToken)
     {
         return _store.GetAsync(PartitionKey, id, cancellationToken);

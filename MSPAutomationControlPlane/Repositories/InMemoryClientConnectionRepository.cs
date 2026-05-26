@@ -13,6 +13,12 @@ public sealed class InMemoryClientConnectionRepository : IClientConnectionReposi
         return Task.CompletedTask;
     }
 
+    public Task UpdateAsync(ClientConnection clientConnection, CancellationToken cancellationToken)
+    {
+        _clientConnections[clientConnection.Id] = clientConnection;
+        return Task.CompletedTask;
+    }
+
     public Task<ClientConnection?> GetAsync(string id, CancellationToken cancellationToken)
     {
         _clientConnections.TryGetValue(id, out var clientConnection);

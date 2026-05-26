@@ -33,4 +33,8 @@ public sealed record ClientConnection
     public string? CreatedBy { get; init; }
 
     public DateTimeOffset CreatedAt { get; init; }
+
+    public string? UpdatedBy { get; init; }
+
+    public DateTimeOffset? UpdatedAt { get; init; }
 }

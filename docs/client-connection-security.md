@@ -152,6 +152,8 @@ The bootstrap process may create the app registration automatically when run by 
 
 The repository includes `scripts/new-client-connection-bootstrap.ps1` to generate the JSON record used by the control plane.
 
+Client connection records can be registered, reviewed, and updated through the management UI or API. This allows an MSP operator to start with a `Draft` or `PendingConsent` record, then update the execution app ID, service principal ID, certificate reference, configured permissions, and readiness notes as target tenant bootstrap progresses.
+
 Manual/pre-created app registration mode:
 
 ```powershell

@@ -41,7 +41,7 @@ var host = new HostBuilder()
             services.AddSingleton<IAuditEventRepository, InMemoryAuditEventRepository>();
         }
 
-        services.AddSingleton<IOperatorContext, StubOperatorContext>();
+        services.AddSingleton<IOperatorContext, OperatorContext>();
 
         var queueProvider = Environment.GetEnvironmentVariable("ControlPlane__QueueProvider");
         if (string.Equals(queueProvider, "ServiceBus", StringComparison.OrdinalIgnoreCase))

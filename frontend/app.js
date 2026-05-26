@@ -4,6 +4,7 @@ const state = {
   auth: config.auth || {},
   msalClient: null,
   msalAccount: null,
+  selectedClientId: null,
   clients: [],
   modules: [],
   jobs: [],
@@ -347,6 +348,51 @@ function renderModulePreview() {
   target.classList.remove("hidden");
 }
 
+function renderClientPreview() {
+  const target = el("client-preview");
+  target.innerHTML = "";
+
+  let client;
+  try {
+    client = JSON.parse(el("client-json").value);
+  } catch {
+    target.classList.add("hidden");
+    return;
+  }
+
+  const consentedPermissions = Array.isArray(client.configuredPermissions)
+    ? client.configuredPermissions.filter((permission) => permission.adminConsented).length
+    : 0;
+  const totalPermissions = Array.isArray(client.configuredPermissions) ? client.configuredPermissions.length : 0;
+
+  const rows = [
+    ["Client", `${client.displayName || client.id || "Unnamed"} (${client.id || "no id"})`],
+    ["Tenant", client.tenantId || "Not set"],
+    ["Readiness", client.readinessStatus || "Unknown"],
+    ["Execution", client.executionMode || "Not set"],
+    ["App client", client.executionAppClientId || "Not set"],
+    ["Permissions", `${consentedPermissions}/${totalPermissions} consented`],
+    ["Scopes", Array.isArray(client.allowedScopes) ? client.allowedScopes.join(", ") : "Not set"]
+  ];
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "preview-row";
+
+    const labelNode = document.createElement("span");
+    labelNode.textContent = label;
+
+    const valueNode = document.createElement("strong");
+    valueNode.textContent = value;
+
+    row.appendChild(labelNode);
+    row.appendChild(valueNode);
+    target.appendChild(row);
+  });
+
+  target.classList.remove("hidden");
+}
+
 function renderTimeline(targetId, events) {
   const sorted = [...events].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)));
   renderList(targetId, sorted.slice(0, 25), (event) => {
@@ -376,11 +422,19 @@ function render() {
   el("metric-notifications").textContent = state.notifications.length;
   el("metric-audit").textContent = state.jobs.length;
 
-  renderList("clients-list", state.clients, (client) =>
-    listItem(
+  renderList("clients-list", state.clients, (client) => {
+    const item = listItem(
       client.displayName || client.id,
       `${client.tenantId || ""} - ${client.executionMode || ""} - ${client.readinessStatus || "Unknown"}`,
-      client.enabled ? "Enabled" : "Disabled"));
+      client.enabled ? "Enabled" : "Disabled");
+
+    item.addEventListener("click", () => {
+      state.selectedClientId = client.id;
+      el("client-json").value = pretty(client);
+      renderClientPreview();
+    });
+    return item;
+  });
 
   renderList("modules-list", state.modules, (module) => {
     const manifest = module.manifest || module;
@@ -457,6 +511,7 @@ function wireNavigation() {
 }
 
 function wireForms() {
+  el("client-json").addEventListener("input", renderClientPreview);
   el("module-json").addEventListener("input", renderModulePreview);
 
   el("client-form").addEventListener("submit", async (event) => {
@@ -464,6 +519,27 @@ function wireForms() {
     try {
       await submitJsonForm("client-json", "client-connections");
       setMessage("Client connection registered.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("update-client-button").addEventListener("click", async () => {
+    try {
+      const payload = JSON.parse(el("client-json").value);
+      if (!payload.id) {
+        throw new Error("Client connection id is required.");
+      }
+
+      const result = await api(`client-connections/${encodeURIComponent(payload.id)}`, {
+        method: "PUT",
+        body: JSON.stringify(payload)
+      });
+      state.selectedClientId = result.id;
+      await refreshAll();
+      el("client-json").value = pretty(result);
+      renderClientPreview();
+      setMessage("Client connection updated.");
     } catch (error) {
       setMessage(error.message, "bad");
     }
@@ -546,6 +622,7 @@ function seedTextareas() {
   el("module-json").value = pretty(samples.module);
   el("job-json").value = pretty(samples.job);
   el("notification-json").value = pretty(samples.notification);
+  renderClientPreview();
   renderModulePreview();
 }
 
