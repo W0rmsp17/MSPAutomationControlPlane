@@ -34,6 +34,8 @@ var host = new HostBuilder()
             services.AddSingleton<IClientConnectionRepository, TableStorageClientConnectionRepository>();
             services.AddSingleton<INotificationSubscriptionRepository, TableStorageNotificationSubscriptionRepository>();
             services.AddSingleton<IAuditEventRepository, TableStorageAuditEventRepository>();
+            services.AddSingleton<IDataConsumerConnectorRepository, TableStorageDataConsumerConnectorRepository>();
+            services.AddSingleton<IDerivedArtifactRepository, TableStorageDerivedArtifactRepository>();
         }
         else
         {
@@ -42,6 +44,8 @@ var host = new HostBuilder()
             services.AddSingleton<IClientConnectionRepository, InMemoryClientConnectionRepository>();
             services.AddSingleton<INotificationSubscriptionRepository, InMemoryNotificationSubscriptionRepository>();
             services.AddSingleton<IAuditEventRepository, InMemoryAuditEventRepository>();
+            services.AddSingleton<IDataConsumerConnectorRepository, InMemoryDataConsumerConnectorRepository>();
+            services.AddSingleton<IDerivedArtifactRepository, InMemoryDerivedArtifactRepository>();
         }
 
         services.AddSingleton<IOperatorContext, OperatorContext>();
@@ -61,6 +65,8 @@ var host = new HostBuilder()
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
+        services.AddSingleton<DataConsumerConnectorService>();
+        services.AddSingleton<DerivedArtifactService>();
         services.AddSingleton<GraphPermissionGrantVerifier>();
         services.AddSingleton<ReadinessService>();
         services.AddSingleton<ProvisioningPlanService>();

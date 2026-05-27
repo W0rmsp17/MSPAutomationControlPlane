@@ -154,6 +154,16 @@ The first endpoint returns generic artifact descriptors. The second returns the 
 
 Downstream consumers can generate derived artifacts from raw module output. Derived artifacts must reference their source job artifact and should not replace the raw module result as the source of truth. See `docs/ai-data-consumer.md`.
 
+MVP derived artifact endpoints:
+
+```text
+POST /api/data-consumers
+GET  /api/data-consumers
+POST /api/jobs/{jobId}/artifacts/{artifactName}/process
+GET  /api/jobs/{jobId}/derived-artifacts
+GET  /api/jobs/{jobId}/derived-artifacts/{derivedArtifactId}
+```
+
 ## Job Output
 
 The module should return structured output.

@@ -32,6 +32,7 @@ The raw module artifact remains the source of truth. AI output is derived analys
 
 Initial connector categories:
 
+- `TemplateSummary`
 - `AI`
 - `Webhook`
 - `StorageExport`
@@ -39,6 +40,7 @@ Initial connector categories:
 - `EmailRenderer`
 
 The AI connector is one implementation of the generic data consumer pattern.
+The MVP also includes a `TemplateSummary` connector so the derived artifact flow can be tested without a live AI provider or provider credential.
 
 ## AI Connector Definition
 
@@ -168,6 +170,16 @@ The process endpoint should:
 5. Build the provider request.
 6. Store the derived artifact.
 7. Write audit events.
+
+MVP implementation status:
+
+- `POST /api/data-consumers` registers connector definitions.
+- `GET /api/data-consumers` lists connector definitions.
+- `POST /api/jobs/{jobId}/artifacts/{artifactName}/process` processes the `result` artifact.
+- `GET /api/jobs/{jobId}/derived-artifacts` lists derived artifacts for a job.
+- `GET /api/jobs/{jobId}/derived-artifacts/{derivedArtifactId}` returns a stored derived artifact.
+- `TemplateSummary` produces deterministic derived JSON from the raw module result.
+- `AI` is modelled in the connector contract but should only be wired after provider credentials, prompt templates, and data policy controls are explicit.
 
 ## Security Controls
 

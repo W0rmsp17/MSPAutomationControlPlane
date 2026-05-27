@@ -7,6 +7,8 @@ public enum AuditEventType
     ClientConnectionUpdated,
     NotificationSubscriptionRegistered,
     NotificationSubscriptionDeleted,
+    DataConsumerConnectorRegistered,
+    DerivedArtifactCreated,
     JobSubmitted,
     JobCompleted,
     JobFailed
