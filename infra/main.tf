@@ -19,6 +19,8 @@ provider "azurerm" {
   tenant_id       = var.msp_tenant_id
 }
 
+provider "random" {}
+
 resource "random_string" "suffix" {
   length  = 6
   lower   = true
@@ -282,6 +284,18 @@ resource "azurerm_container_app_job" "module_worker" {
 resource "azurerm_role_assignment" "function_start_container_jobs" {
   scope                = azurerm_container_app_job.module_worker.id
   role_definition_name = "Contributor"
+  principal_id         = azurerm_windows_function_app.control_api.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "function_read_key_vault_certificates" {
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Certificate User"
+  principal_id         = azurerm_windows_function_app.control_api.identity[0].principal_id
+}
+
+resource "azurerm_role_assignment" "function_read_key_vault_secrets" {
+  scope                = azurerm_key_vault.main.id
+  role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_windows_function_app.control_api.identity[0].principal_id
 }
 

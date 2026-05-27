@@ -232,3 +232,35 @@ The response includes:
 - ordered provisioning steps with owner and status
 
 This endpoint is intentionally advisory. It does not create app registrations, grant Graph permissions, upload certificates, or change client readiness. Those actions belong to the access provisioning workflow and should require explicit operator/admin action.
+
+## Certificate Provisioning Helper
+
+The repository includes `scripts/new-client-execution-certificate.ps1` for the MSP-side certificate step.
+
+The helper:
+
+- creates a local exportable self-signed certificate
+- exports a temporary PFX and password under `.work/client-certificates`
+- adds the public certificate to the target tenant app registration
+- imports the PFX into the MSP Key Vault
+- returns the runtime certificate reference, for example `kv://certificates/client-contoso-graph`
+- removes the temporary certificate from the current user's certificate store
+
+The `.work` folder and `*.pfx` files are gitignored. The temporary PFX and password file should still be deleted after import.
+
+Example:
+
+```powershell
+.\scripts\new-client-execution-certificate.ps1 `
+  -ClientConnectionId "client-contoso" `
+  -TargetTenantId "<target-tenant-id>" `
+  -ExecutionAppClientId "<target-app-client-id>" `
+  -KeyVaultName "<msp-key-vault-name>"
+```
+
+Required privileges:
+
+- target tenant permission to update the execution app registration credentials
+- MSP Azure permission to import certificates into the control plane Key Vault
+
+Because the Key Vault uses Azure RBAC, the operator running the helper needs a Key Vault data-plane role such as `Key Vault Certificates Officer`. The Function App managed identity needs certificate/secret read roles so it can download the private key at execution time. Terraform grants the Function App identity `Key Vault Certificate User` and `Key Vault Secrets User`.
