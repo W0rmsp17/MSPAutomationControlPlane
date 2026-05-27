@@ -134,6 +134,10 @@ The management interface should show whether a module is ready for a client befo
 
 The MVP exposes `POST /api/readiness/check` for this comparison. Job submission uses the same readiness service, so a client that is disabled, not `Ready`, missing permissions, missing admin consent, not enabled for a module, or blocked by scope compatibility cannot run the job.
 
+Deployed environments also enable live Microsoft Graph grant validation. For Graph-backed modules, readiness uses the configured client certificate to query the target service principal app-role assignments and confirms the required Microsoft Graph application roles are actually granted. This catches cases where a connection record says `adminConsented: true` but the target app registration was never granted the corresponding app roles.
+
+Local development leaves live Graph validation disabled by default so sample clients and in-memory tests do not require Key Vault or tenant access.
+
 ## Bootstrap Output
 
 Target tenant bootstrap should produce a non-secret connection record that can be registered with the MSP control plane:

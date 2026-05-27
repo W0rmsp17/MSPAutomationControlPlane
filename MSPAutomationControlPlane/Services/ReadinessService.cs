@@ -5,7 +5,8 @@ namespace MSPAutomationControlPlane.Services;
 
 public sealed class ReadinessService(
     IModuleRepository moduleRepository,
-    IClientConnectionRepository clientConnectionRepository)
+    IClientConnectionRepository clientConnectionRepository,
+    GraphPermissionGrantVerifier graphPermissionGrantVerifier)
 {
     public async Task<Result<ReadinessCheckResult>> CheckAsync(
         ReadinessCheckRequest request,
@@ -115,6 +116,27 @@ public sealed class ReadinessService(
         if (clientConnection.ConfiguredPermissions.Count == 0 && module.Manifest.RequiredPermissions.Count == 0)
         {
             warnings.Add("Module declares no required permissions.");
+        }
+
+        if (blockingIssues.Count == 0)
+        {
+            var grantCheck = await graphPermissionGrantVerifier.CheckAsync(
+                clientConnection,
+                module.Manifest.RequiredPermissions,
+                cancellationToken);
+            if (!grantCheck.Succeeded)
+            {
+                blockingIssues.AddRange(grantCheck.Errors);
+            }
+            else
+            {
+                warnings.AddRange(grantCheck.Value!.Warnings);
+                foreach (var missingPermission in grantCheck.Value.MissingPermissions)
+                {
+                    blockingIssues.Add(
+                        $"Target app registration is missing live Microsoft Graph app-role grant '{missingPermission}'.");
+                }
+            }
         }
 
         return Result<ReadinessCheckResult>.Success(new ReadinessCheckResult

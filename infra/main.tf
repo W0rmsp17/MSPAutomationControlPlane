@@ -180,29 +180,30 @@ resource "azurerm_windows_function_app" "control_api" {
   }
 
   app_settings = {
-    FUNCTIONS_WORKER_RUNTIME                       = "dotnet-isolated"
-    WEBSITE_RUN_FROM_PACKAGE                       = "1"
-    ControlPlane__RepositoryProvider               = "TableStorage"
-    ControlPlane__StorageConnectionString          = azurerm_storage_account.main.primary_connection_string
-    ControlPlane__TablePrefix                      = var.table_prefix
-    ControlPlane__Modules__AllowedRegistries       = join(",", var.allowed_module_registries)
-    ControlPlane__ExecutionProvider                = var.execution_provider
-    ControlPlane__RuntimeBroker__SigningKey        = random_password.runtime_broker_signing_key.result
-    ControlPlane__RuntimeBroker__BaseUrl           = "https://func-${var.name_prefix}-${local.resource_suffix}.azurewebsites.net/api"
-    ControlPlane__ContainerApps__SubscriptionId    = var.subscription_id
-    ControlPlane__ContainerApps__ResourceGroupName = azurerm_resource_group.main.name
-    ControlPlane__ContainerApps__JobName           = azurerm_container_app_job.module_worker.name
-    ControlPlane__ContainerApps__ContainerName     = "module-worker"
-    ControlPlane__ContainerApps__Cpu               = tostring(var.container_job_cpu)
-    ControlPlane__ContainerApps__Memory            = var.container_job_memory
-    ControlPlane__QueueProvider                    = "ServiceBus"
-    ControlPlane__ServiceBusConnectionString       = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
-    ControlPlane__JobQueueName                     = azurerm_servicebus_queue.jobs.name
-    ServiceBusConnection                           = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
-    ServiceBusJobQueueName                         = azurerm_servicebus_queue.jobs.name
-    Artifacts__ContainerName                       = azurerm_storage_container.artifacts.name
-    Artifacts__BlobServiceUri                      = azurerm_storage_account.main.primary_blob_endpoint
-    KeyVault__Uri                                  = azurerm_key_vault.main.vault_uri
+    FUNCTIONS_WORKER_RUNTIME                            = "dotnet-isolated"
+    WEBSITE_RUN_FROM_PACKAGE                            = "1"
+    ControlPlane__RepositoryProvider                    = "TableStorage"
+    ControlPlane__StorageConnectionString               = azurerm_storage_account.main.primary_connection_string
+    ControlPlane__TablePrefix                           = var.table_prefix
+    ControlPlane__Modules__AllowedRegistries            = join(",", var.allowed_module_registries)
+    ControlPlane__ExecutionProvider                     = var.execution_provider
+    ControlPlane__Readiness__LiveGraphValidationEnabled = "true"
+    ControlPlane__RuntimeBroker__SigningKey             = random_password.runtime_broker_signing_key.result
+    ControlPlane__RuntimeBroker__BaseUrl                = "https://func-${var.name_prefix}-${local.resource_suffix}.azurewebsites.net/api"
+    ControlPlane__ContainerApps__SubscriptionId         = var.subscription_id
+    ControlPlane__ContainerApps__ResourceGroupName      = azurerm_resource_group.main.name
+    ControlPlane__ContainerApps__JobName                = azurerm_container_app_job.module_worker.name
+    ControlPlane__ContainerApps__ContainerName          = "module-worker"
+    ControlPlane__ContainerApps__Cpu                    = tostring(var.container_job_cpu)
+    ControlPlane__ContainerApps__Memory                 = var.container_job_memory
+    ControlPlane__QueueProvider                         = "ServiceBus"
+    ControlPlane__ServiceBusConnectionString            = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
+    ControlPlane__JobQueueName                          = azurerm_servicebus_queue.jobs.name
+    ServiceBusConnection                                = azurerm_servicebus_queue_authorization_rule.jobs_send_listen.primary_connection_string
+    ServiceBusJobQueueName                              = azurerm_servicebus_queue.jobs.name
+    Artifacts__ContainerName                            = azurerm_storage_container.artifacts.name
+    Artifacts__BlobServiceUri                           = azurerm_storage_account.main.primary_blob_endpoint
+    KeyVault__Uri                                       = azurerm_key_vault.main.vault_uri
   }
 
   lifecycle {

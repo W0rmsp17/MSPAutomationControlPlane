@@ -21,6 +21,7 @@ var host = new HostBuilder()
         services.AddSingleton(ExecutionProviderOptions.FromEnvironment());
         services.AddSingleton(ExecutionTokenBrokerOptions.FromEnvironment());
         services.AddSingleton(RuntimeBrokerTokenOptions.FromEnvironment());
+        services.AddSingleton(GraphPermissionGrantVerifierOptions.FromEnvironment());
         services.AddSingleton(ArtifactStorageOptions.FromEnvironment());
         services.AddSingleton<HttpClient>();
 
@@ -60,6 +61,7 @@ var host = new HostBuilder()
         services.AddSingleton<ClientConnectionService>();
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
+        services.AddSingleton<GraphPermissionGrantVerifier>();
         services.AddSingleton<ReadinessService>();
         services.AddSingleton<ProvisioningPlanService>();
         services.AddSingleton<JobService>();
