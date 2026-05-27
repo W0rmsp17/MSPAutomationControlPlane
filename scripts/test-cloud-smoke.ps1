@@ -67,7 +67,56 @@ function Invoke-ControlPlaneApi {
         $arguments.Body = $Body
     }
 
-    return Invoke-RestMethod @arguments
+    try {
+        return Invoke-RestMethod @arguments
+    }
+    catch {
+        $errorText = $_.ErrorDetails.Message
+        if ([string]::IsNullOrWhiteSpace($errorText)) {
+            $errorText = $_.Exception.Message
+        }
+
+        try {
+            $problem = $errorText | ConvertFrom-Json -ErrorAction Stop
+            if ($problem.error) {
+                $errorText = $problem.error
+            }
+
+            if ($problem.errors) {
+                $errorText = "$errorText $($problem.errors -join ' ')"
+            }
+        }
+        catch {
+            # Keep the original error text when the response is not JSON.
+        }
+
+        throw "$Method $Path failed: $errorText"
+    }
+}
+
+function Assert-ApiRecord {
+    param(
+        [object]$Value,
+
+        [Parameter(Mandatory)]
+        [string]$Operation,
+
+        [Parameter(Mandatory)]
+        [string]$RequiredProperty
+    )
+
+    if ($null -eq $Value) {
+        throw "$Operation returned no response."
+    }
+
+    if ($Value.PSObject.Properties.Name -contains "error") {
+        throw "$Operation failed: $($Value.error)"
+    }
+
+    if (-not ($Value.PSObject.Properties.Name -contains $RequiredProperty) -or
+        [string]::IsNullOrWhiteSpace([string]$Value.$RequiredProperty)) {
+        throw "$Operation returned an unexpected response. Expected property '$RequiredProperty'. Response: $($Value | ConvertTo-Json -Depth 8)"
+    }
 }
 
 function Invoke-RegistrationOrReuse {
@@ -163,17 +212,20 @@ Invoke-RegistrationOrReuse `
     -AlreadyRegisteredMessage "Client connection already registered; reusing existing record."
 
 $job = Invoke-ControlPlaneApi -Method "Post" -Path "jobs" -Body $jobRequest
+Assert-ApiRecord -Value $job -Operation "Submit job" -RequiredProperty "id"
 Write-Host "Job submitted: $($job.id) [$($job.status)]"
 
 Start-Sleep -Seconds $DispatchWaitSeconds
 
 $job = Invoke-ControlPlaneApi -Method "Get" -Path "jobs/$($job.id)"
+Assert-ApiRecord -Value $job -Operation "Load job" -RequiredProperty "id"
 Write-Host "Job after dispatch wait: $($job.id) [$($job.status)]"
 
 $collected = $null
 for ($attempt = 1; $attempt -le $CollectAttempts; $attempt++) {
     try {
         $collected = Invoke-ControlPlaneApi -Method "Post" -Path "jobs/$($job.id)/collect-result"
+        Assert-ApiRecord -Value $collected -Operation "Collect job result" -RequiredProperty "id"
         break
     }
     catch {
