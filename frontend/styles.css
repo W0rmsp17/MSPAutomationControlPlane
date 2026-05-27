@@ -450,6 +450,36 @@ textarea {
   gap: 8px;
 }
 
+.provisioning-issue {
+  background: #fffaeb;
+  border: 1px solid #fedf89;
+  border-radius: 6px;
+  color: var(--warn);
+  font-weight: 650;
+  padding: 10px;
+}
+
+.provisioning-steps {
+  display: grid;
+  gap: 8px;
+}
+
+.provisioning-step {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #ffffff;
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.provisioning-step-header {
+  align-items: center;
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+}
+
 .demo-actions {
   flex-wrap: wrap;
   margin-bottom: 14px;

@@ -648,6 +648,89 @@ function renderReadinessResult(result) {
   target.classList.remove("hidden");
 }
 
+function provisioningPlanRequestFromJobPayload(payload) {
+  return {
+    clientConnectionId: payload.clientConnectionId,
+    moduleId: payload.moduleId,
+    moduleVersion: payload.moduleVersion
+  };
+}
+
+function renderProvisioningPlan(plan) {
+  const target = el("job-provisioning-plan");
+  target.innerHTML = "";
+
+  const rows = [
+    ["Status", plan.isExecutionReady ? "Ready" : "Action required"],
+    ["Client", `${plan.clientDisplayName || plan.clientConnectionId || "Not set"} (${plan.clientConnectionId || "no id"})`],
+    ["Module", `${plan.moduleId || "Not set"} ${plan.moduleVersion || ""}`.trim()],
+    ["Tenant", plan.tenantId || "Not set"],
+    ["Certificate", plan.recommendedCertificateReference || "Not set"]
+  ];
+
+  rows.forEach(([label, value]) => {
+    const row = document.createElement("div");
+    row.className = "preview-row";
+
+    const labelNode = document.createElement("span");
+    labelNode.textContent = label;
+
+    const valueNode = document.createElement("strong");
+    valueNode.textContent = value;
+
+    row.appendChild(labelNode);
+    row.appendChild(valueNode);
+    target.appendChild(row);
+  });
+
+  if (Array.isArray(plan.blockingIssues) && plan.blockingIssues.length) {
+    plan.blockingIssues.forEach((issue) => {
+      const item = document.createElement("div");
+      item.className = "provisioning-issue";
+      item.textContent = issue;
+      target.appendChild(item);
+    });
+  }
+
+  const steps = document.createElement("div");
+  steps.className = "provisioning-steps";
+  (plan.steps || []).forEach((step) => {
+    const item = document.createElement("article");
+    item.className = "provisioning-step";
+
+    const header = document.createElement("div");
+    header.className = "provisioning-step-header";
+
+    const title = document.createElement("strong");
+    title.textContent = `${step.order}. ${step.title}`;
+
+    const status = document.createElement("span");
+    status.className = `pill ${step.status === "Complete" ? "ok" : step.status === "Blocked" ? "bad" : "warn"}`;
+    status.textContent = step.status;
+
+    header.appendChild(title);
+    header.appendChild(status);
+
+    const detail = document.createElement("div");
+    detail.textContent = step.detail || "";
+
+    const owner = document.createElement("div");
+    owner.className = "meta";
+    owner.textContent = step.owner ? `Owner: ${step.owner}` : "";
+
+    item.appendChild(header);
+    item.appendChild(detail);
+    if (owner.textContent) {
+      item.appendChild(owner);
+    }
+
+    steps.appendChild(item);
+  });
+
+  target.appendChild(steps);
+  target.classList.remove("hidden");
+}
+
 function renderTimeline(targetId, events) {
   const sorted = [...events].sort((a, b) => String(b.occurredAt).localeCompare(String(a.occurredAt)));
   renderList(targetId, sorted.slice(0, 25), (event) => {
@@ -922,6 +1005,7 @@ function wireForms() {
       const payload = composeJobRequestFromControls();
       el("job-json").value = pretty(payload);
       el("job-readiness").classList.add("hidden");
+      el("job-provisioning-plan").classList.add("hidden");
       setMessage("Job request composed.");
     } catch (error) {
       setMessage(error.message, "bad");
@@ -937,6 +1021,20 @@ function wireForms() {
       });
       renderReadinessResult(result);
       setMessage(result.isReady ? "Job readiness check passed." : "Job readiness check found blockers.", result.isReady ? "ok" : "warn");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("show-provisioning-plan-button").addEventListener("click", async () => {
+    try {
+      const payload = JSON.parse(el("job-json").value);
+      const result = await api("provisioning/plan", {
+        method: "POST",
+        body: JSON.stringify(provisioningPlanRequestFromJobPayload(payload))
+      });
+      renderProvisioningPlan(result);
+      setMessage(result.isExecutionReady ? "Provisioning plan is complete." : "Provisioning plan has required actions.", result.isExecutionReady ? "ok" : "warn");
     } catch (error) {
       setMessage(error.message, "bad");
     }
