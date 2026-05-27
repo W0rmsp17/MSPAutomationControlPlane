@@ -33,12 +33,14 @@ The default sample client connection is public-safe placeholder data. It can val
 For a full execution smoke test, create untracked local files under `.work` with a real client connection and matching job request:
 
 ```powershell
+.\scripts\new-full-execution-smoke-files.ps1
+
 .\scripts\test-cloud-smoke.ps1 `
-  -ClientConnectionPath ".work\client-connection-real.json" `
-  -JobRequestPath ".work\submit-job-real.json"
+  -ClientConnectionPath ".work\smoke\client-connection-real.json" `
+  -JobRequestPath ".work\smoke\submit-job-real.json"
 ```
 
-Use `samples/full-execution-smoke.template.json` as the shape for those two local files. Split the `clientConnection` object into `.work\client-connection-real.json` and the `jobRequest` object into `.work\submit-job-real.json`, then replace every placeholder with values from the target tenant bootstrap.
+The helper reads `samples/full-execution-smoke.template.json`, splits the `clientConnection` and `jobRequest` objects into local ignored files, and refuses to overwrite existing files unless `-Force` is supplied. Replace every placeholder with values from the target tenant bootstrap before running full execution.
 
 The real client connection must reference a certificate that exists in the deployed Key Vault and has the required Microsoft Graph permissions/admin consent in the target tenant.
 
