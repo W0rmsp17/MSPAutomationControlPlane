@@ -174,7 +174,7 @@ If Container Apps is used for worker execution, the Azure subscription must have
 az provider register --namespace Microsoft.App
 ```
 
-The Static Web App is configured for Microsoft Entra sign-in against the MSP tenant. `ensure-swa-auth-app.ps1` also exposes an API scope on the same app registration, ensures the matching Enterprise App/service principal exists, and configures the Function App to validate MSP-tenant bearer tokens. `deploy-frontend.ps1` injects the API base URL plus MSAL client settings into the protected Static Web App package. By default, API access is limited to the signed-in implementor's Entra user object ID; additional allowed user IDs or group IDs can be passed to `ensure-swa-auth-app.ps1`.
+The Static Web App hosts the static management UI. The UI uses MSAL to sign operators in against the MSP tenant and sends the resulting access token to the Function API. `ensure-swa-auth-app.ps1` exposes the API scope, ensures the matching Enterprise App/service principal exists, and configures the Function App to validate MSP-tenant bearer tokens. `deploy-frontend.ps1` injects the API base URL plus MSAL client settings into the Static Web App package. By default, API access is limited to the signed-in implementor's Entra user object ID; additional allowed user IDs or group IDs can be passed to `ensure-swa-auth-app.ps1`.
 
 The first browser launch after enabling the API scope may require a one-time Microsoft Entra consent prompt. In production, an MSP can assign access through an operator group and pass that group object ID during bootstrap:
 
@@ -204,6 +204,9 @@ A requested execution of a module against a client tenant. Jobs are submitted th
 
 Run output:
 Structured result returned by the module. Outputs should include status, summary, findings, metrics, and artifact references.
+
+Derived artifact:
+Optional downstream output created from a stored job artifact by a data consumer connector. The raw module artifact remains the source of truth; derived artifacts are for summaries, exports, AI-assisted interpretation, dashboards, or notification-specific payloads.
 
 Approval:
 Optional workflow step for high-risk modules. Some modules may run immediately; others may require approval before execution.
@@ -248,7 +251,8 @@ Recommended demo path:
 5. Run readiness check before submission.
 6. Submit the job and observe it move from `Queued` to `Running`.
 7. Collect the result and review structured output.
-8. Open audit history to show who requested the job and when.
+8. Open Data Consumers, process the raw result artifact, and inspect the derived JSON.
+9. Open audit history to show who requested the job and when.
 
 For a portfolio README, short GIFs work well for the UI flow. A separate 3-5 minute screen recording can explain the MSP business problem, architecture, security model, and validated job lifecycle.
 
@@ -264,7 +268,7 @@ The MVP is intentionally low-idle-cost:
 
 Security boundaries:
 
-- Operators authenticate through Microsoft Entra.
+- Operators authenticate through Microsoft Entra in the browser using MSAL.
 - API calls require bearer tokens for the configured API scope.
 - Operator access can be limited by user object ID, group object ID, or app role.
 - Client tenant execution is represented by explicit non-secret connection records.
@@ -278,6 +282,7 @@ This repository now has a deployable MVP foundation:
 - .NET 8 isolated Azure Functions control API.
 - HTTP functions for health, modules, client connections, notification subscriptions, jobs, and audit.
 - Recent job catalog and job event history in the management UI.
+- Data consumer connector registration and derived artifact inspection in the management UI.
 - Service Bus-triggered simulated dispatch flow.
 - Table Storage persistence provider.
 - Terraform deployment for the central MSP control plane.

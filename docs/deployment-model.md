@@ -31,7 +31,7 @@ deploy.ps1
   -> Terraform init/validate/plan/apply.
 
 ensure-swa-auth-app.ps1
-  -> Create or reuse an MSP-tenant Entra app registration for Static Web App authentication, expose an API scope, and configure Function API token validation.
+  -> Create or reuse an MSP-tenant Entra app registration for browser MSAL sign-in, expose an API scope, and configure Function API token validation.
 
 deploy-function.ps1
   -> Publish and zip-deploy the .NET isolated Azure Functions control API.
@@ -65,7 +65,7 @@ Terraform should deploy:
 
 Subscriptions using Container Apps must have the `Microsoft.App` resource provider registered before the Container Apps Environment can be created.
 
-The MVP management UI is protected with Static Web Apps authentication using a Microsoft Entra app registration in the MSP tenant. The same app registration exposes an `access_as_user` API scope for the Function App API. The frontend uses MSAL to request an MSP-tenant access token and sends it as a bearer token to the Function App.
+The Static Web App serves static frontend files. Access control is enforced at the Function API boundary, not by Static Web Apps platform authentication. The management UI uses MSAL with an MSP-tenant Microsoft Entra app registration to request an `access_as_user` token, then sends it as a bearer token to the Function App.
 
 The Function App validates issuer, audience, token lifetime, signing keys, required scope, and operator authorization. Operator authorization can be controlled through allowed user object IDs, group object IDs, or app roles. The bootstrap script defaults API access to the signed-in implementor so a fresh deployment is not accidentally open to every authenticated MSP tenant user.
 
