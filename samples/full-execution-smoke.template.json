@@ -1,0 +1,56 @@
+{
+  "clientConnection": {
+    "id": "client-contoso-account-report",
+    "displayName": "Contoso Account Report",
+    "tenantId": "<target-tenant-id>",
+    "executionMode": "Central",
+    "executionAppClientId": "<target-execution-app-client-id>",
+    "certificateReference": "kv://certificates/<key-vault-certificate-name>",
+    "servicePrincipalObjectId": "<target-service-principal-object-id>",
+    "readinessStatus": "Ready",
+    "configuredPermissions": [
+      {
+        "provider": "MicrosoftGraph",
+        "permission": "Organization.Read.All",
+        "type": "Application",
+        "adminConsented": true
+      },
+      {
+        "provider": "MicrosoftGraph",
+        "permission": "User.Read.All",
+        "type": "Application",
+        "adminConsented": true
+      },
+      {
+        "provider": "MicrosoftGraph",
+        "permission": "Directory.Read.All",
+        "type": "Application",
+        "adminConsented": true
+      }
+    ],
+    "readinessNotes": "Local full-execution smoke template. Copy to .work and replace placeholders before use.",
+    "enabledModuleIds": [
+      "msp-account-management-report"
+    ],
+    "allowedScopes": [
+      "Tenant",
+      "Users"
+    ],
+    "enabled": true
+  },
+  "jobRequest": {
+    "moduleId": "msp-account-management-report",
+    "moduleVersion": "0.1.3",
+    "clientConnectionId": "client-contoso-account-report",
+    "targetScope": {
+      "type": "Tenant",
+      "mode": "All",
+      "targets": []
+    },
+    "parameters": {
+      "includeInactiveUsers": true,
+      "includeLicenseWaste": true,
+      "reportFormat": "json"
+    }
+  }
+}

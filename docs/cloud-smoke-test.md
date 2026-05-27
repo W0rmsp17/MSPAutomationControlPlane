@@ -38,6 +38,8 @@ For a full execution smoke test, create untracked local files under `.work` with
   -JobRequestPath ".work\submit-job-real.json"
 ```
 
+Use `samples/full-execution-smoke.template.json` as the shape for those two local files. Split the `clientConnection` object into `.work\client-connection-real.json` and the `jobRequest` object into `.work\submit-job-real.json`, then replace every placeholder with values from the target tenant bootstrap.
+
 The real client connection must reference a certificate that exists in the deployed Key Vault and has the required Microsoft Graph permissions/admin consent in the target tenant.
 
 If Azure CLI has not yet consented to the API scope, run the scoped login once:
