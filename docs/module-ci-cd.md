@@ -117,4 +117,4 @@ Later hardening can add:
 - Vulnerability scan status.
 - Per-module approval policies.
 - Registry-specific allow-lists per environment.
-- Manifest import from a Git raw URL, limited to manifest discovery only.
+- Manifest import from an HTTPS `raw.githubusercontent.com` URL, limited to manifest discovery only.

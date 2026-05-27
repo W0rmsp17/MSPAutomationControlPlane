@@ -109,6 +109,11 @@ public sealed class ModuleRegistryService(
         var errors = new List<string>();
         var source = importRequest.Source;
 
+        if (!string.IsNullOrWhiteSpace(source.ManifestUrl))
+        {
+            ValidateManifestUrl(errors, source.ManifestUrl, importRequest.Validation.AllowMovingRef);
+        }
+
         if (string.Equals(source.Type, "git", StringComparison.OrdinalIgnoreCase) &&
             string.IsNullOrWhiteSpace(source.ManifestUrl))
         {
@@ -119,6 +124,39 @@ public sealed class ModuleRegistryService(
         }
 
         return errors;
+    }
+
+    private static void ValidateManifestUrl(List<string> errors, string manifestUrl, bool allowMovingRef)
+    {
+        if (!Uri.TryCreate(manifestUrl, UriKind.Absolute, out var uri))
+        {
+            errors.Add("manifestUrl must be an absolute URL.");
+            return;
+        }
+
+        if (!string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add("manifestUrl must use HTTPS.");
+        }
+
+        if (!string.Equals(uri.Host, "raw.githubusercontent.com", StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add("manifestUrl must point to raw.githubusercontent.com for MVP imports.");
+            return;
+        }
+
+        var pathParts = uri.AbsolutePath.Trim('/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (pathParts.Length < 4)
+        {
+            errors.Add("raw.githubusercontent.com manifestUrl must include owner, repository, immutable ref, and manifest path.");
+            return;
+        }
+
+        var gitRef = Uri.UnescapeDataString(pathParts[2]);
+        if (MovingRefs.Contains(gitRef) && !allowMovingRef)
+        {
+            errors.Add("Manifest URL imports must use an immutable release tag or commit SHA. Moving refs such as main, master, develop, dev, trunk, and HEAD are rejected unless validation.allowMovingRef is true.");
+        }
     }
 
     public Task<IReadOnlyList<ModuleRegistration>> ListAsync(CancellationToken cancellationToken)
