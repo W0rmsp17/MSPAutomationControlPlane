@@ -152,6 +152,8 @@ GET /api/jobs/{jobId}/artifacts/result
 
 The first endpoint returns generic artifact descriptors. The second returns the raw structured module result JSON. This keeps the control plane module-agnostic while giving BYOAI, webhook, export, and dashboard consumers a stable data access path.
 
+Downstream consumers can generate derived artifacts from raw module output. Derived artifacts must reference their source job artifact and should not replace the raw module result as the source of truth. See `docs/ai-data-consumer.md`.
+
 ## Job Output
 
 The module should return structured output.

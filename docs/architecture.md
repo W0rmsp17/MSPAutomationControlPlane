@@ -150,6 +150,8 @@ The control plane starts or triggers workers with a standard job envelope. The w
 
 Trigger policy is owned by the control plane, not by modules. Manual, scheduled, webhook, and event-driven triggers should all translate into the same standard job submission path. See `docs/trigger-model.md`.
 
+AI and other data consumers are downstream connector concerns. They should consume stored job artifacts through the control plane API and produce derived artifacts without receiving direct tenant credentials or changing the module execution contract. See `docs/ai-data-consumer.md`.
+
 ### State Store
 
 Azure Table Storage is the recommended MVP state store because it is low-cost and good enough for simple entities:
