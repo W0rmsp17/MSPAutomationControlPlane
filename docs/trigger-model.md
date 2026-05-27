@@ -60,11 +60,11 @@ Future API shape:
 
 ```json
 {
-  "id": "trigger-monthly-account-report-plutonix",
-  "displayName": "Monthly account report - Plutonix",
+  "id": "trigger-monthly-account-report-contoso",
+  "displayName": "Monthly account report - Contoso",
   "enabled": true,
   "type": "Scheduled",
-  "clientConnectionId": "client-plutonix-account-report",
+  "clientConnectionId": "client-contoso-account-report",
   "moduleId": "msp-account-management-report",
   "moduleVersion": "0.1.3",
   "targetScope": {
