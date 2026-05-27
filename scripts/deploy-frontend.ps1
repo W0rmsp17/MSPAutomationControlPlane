@@ -5,6 +5,7 @@ param(
     [string]$PackageRoot = ".deploy",
     [string]$AuthAppDisplayName = "MSP Automation Control Plane - Static Web App",
     [string]$StaticWebAppsCliPackage = "@azure/static-web-apps-cli@2.0.8",
+    [string]$StaticSitesClientPath,
     [switch]$SkipDeploy
 )
 
@@ -72,6 +73,7 @@ if (Test-Path $publishPath) {
 Copy-Item -Path $sourceRoot -Destination $publishPath -Recurse
 
 $configPath = Join-Path $publishPath "app-config.js"
+$assetVersion = Get-Date -Format "yyyyMMddHHmmss"
 $authApp = az ad app list `
     --display-name $AuthAppDisplayName `
     --query "[0]" `
@@ -92,6 +94,19 @@ window.MSP_CONTROL_PLANE_CONFIG = {
   }
 };
 "@ | Set-Content -Path $configPath -Encoding utf8
+
+$versionedAppPath = Join-Path $publishPath "app.$assetVersion.js"
+$versionedConfigPath = Join-Path $publishPath "app-config.$assetVersion.js"
+Move-Item -LiteralPath (Join-Path $publishPath "app.js") -Destination $versionedAppPath -Force
+Move-Item -LiteralPath $configPath -Destination $versionedConfigPath -Force
+
+$indexPath = Join-Path $publishPath "index.html"
+$indexContent = Get-Content -LiteralPath $indexPath -Raw
+$indexContent = $indexContent.
+    Replace("./styles.css", "./styles.css?v=$assetVersion").
+    Replace("./app-config.js", "./app-config.$assetVersion.js").
+    Replace("./app.js", "./app.$assetVersion.js")
+Set-Content -Path $indexPath -Value $indexContent -Encoding utf8
 
 $authTemplatePath = Join-Path $publishPath "staticwebapp.config.template.json"
 $authConfigPath = Join-Path $publishPath "staticwebapp.config.json"
@@ -116,7 +131,25 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($deploymentToken)) {
     throw "Could not read the Static Web App deployment token."
 }
 
-Invoke-CheckedCommand -FilePath "npx" -Arguments @(
+if (-not [string]::IsNullOrWhiteSpace($StaticSitesClientPath)) {
+    Invoke-CheckedCommand -FilePath $StaticSitesClientPath -Arguments @(
+        "upload",
+        "--app",
+        $publishPath,
+        "--outputLocation",
+        ".",
+        "--appArtifactLocation",
+        ".",
+        "--skipAppBuild",
+        "true",
+        "--apiToken",
+        $deploymentToken,
+        "--deploymentProvider",
+        "SwaCli"
+    ) -SafeDescription "StaticSitesClient upload --app <publishPath> --apiToken <redacted>"
+}
+else {
+    Invoke-CheckedCommand -FilePath "npx" -Arguments @(
     "--yes",
     $StaticWebAppsCliPackage,
     "deploy",
@@ -126,6 +159,7 @@ Invoke-CheckedCommand -FilePath "npx" -Arguments @(
     "--env",
     "production"
 ) -SafeDescription "npx $StaticWebAppsCliPackage deploy <publishPath> --deployment-token <redacted> --env production"
+}
 
 Write-Host "Static Web App deployed: $staticWebAppName" -ForegroundColor Green
 Write-Host "API base URL: $apiBaseUrl"

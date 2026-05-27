@@ -25,13 +25,13 @@
       }
     },
     {
-      "route": "/app.js",
+      "route": "/app*.js",
       "headers": {
         "Cache-Control": "no-store"
       }
     },
     {
-      "route": "/app-config.js",
+      "route": "/app-config*.js",
       "headers": {
         "Cache-Control": "no-store"
       }
