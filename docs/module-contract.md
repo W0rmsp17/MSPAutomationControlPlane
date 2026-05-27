@@ -125,11 +125,21 @@ CONTROL_PLANE_CLIENT_CONNECTION_ID=client-contoso
 CONTROL_PLANE_REQUESTED_BY=operator@example.com
 CONTROL_PLANE_JOB_INPUT_BASE64=<base64 encoded job input JSON>
 CONTROL_PLANE_OUTPUT_BLOB_URI=https://<storage-account>.blob.core.windows.net/artifacts/jobs/<job-id>/result.json?<job-scoped-sas>
+CONTROL_PLANE_RUNTIME_TOKEN_URL=https://<control-plane-api>/api/execution/tokens/graph
+CONTROL_PLANE_RUNTIME_TOKEN=<short-lived job-scoped broker token>
 ```
 
 Container Apps executions receive `CONTROL_PLANE_JOB_INPUT_BASE64` and `CONTROL_PLANE_OUTPUT_BLOB_URI`.
 The output URI is scoped to one job result blob and expires after the module timeout window.
 Local module executions may use `CONTROL_PLANE_INPUT_PATH` and `CONTROL_PLANE_OUTPUT_PATH` instead.
+
+Modules that need Microsoft Graph should prefer the runtime broker exchange over direct Graph token injection:
+
+1. Read `CONTROL_PLANE_RUNTIME_TOKEN_URL`.
+2. Send `POST` with `Authorization: Bearer <CONTROL_PLANE_RUNTIME_TOKEN>`.
+3. Use the returned `accessToken` only in memory for the live Graph calls required by that job.
+
+`GRAPH_ACCESS_TOKEN` remains acceptable for local development and backward-compatible module testing, but deployed control plane execution should use the broker exchange so Graph bearer tokens are not written into Container Apps execution metadata.
 
 ## Job Output
 

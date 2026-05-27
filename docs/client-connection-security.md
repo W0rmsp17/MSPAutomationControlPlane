@@ -202,12 +202,20 @@ The Container Apps execution provider asks the execution token broker for runtim
 For modules that declare Microsoft Graph permissions, the broker:
 
 - loads the client connection
-- resolves the configured Key Vault certificate reference
-- downloads the certificate through the control plane managed identity
+- resolves the configured Key Vault certificate reference shape
+- issues a short-lived job-scoped runtime broker token
+- injects `CONTROL_PLANE_RUNTIME_TOKEN_URL` and `CONTROL_PLANE_RUNTIME_TOKEN` into the module worker
+
+The module exchanges the runtime broker token with the control plane over HTTPS when it needs Microsoft Graph access. During that exchange, the control plane:
+
+- validates the broker token signature, expiry, job ID, module ID, version, and client connection
+- downloads the configured certificate through the control plane managed identity
 - requests a client-credential token for the client tenant using `https://graph.microsoft.com/.default`
-- injects the short-lived token into the module worker as `GRAPH_ACCESS_TOKEN`
+- returns the Graph token to the module process
 
 Provisioning remains outside the execution path. The broker does not create app registrations, grant permissions, upload certificates, or mark client connections as ready. It only mints a token when the connection is already configured.
+
+This avoids writing Microsoft Graph bearer tokens into Container Apps execution metadata. The runtime broker token is still sensitive, but it is scoped to a single job execution context and expires after the module timeout window plus a short buffer.
 
 Runtime-resolvable certificate references are:
 

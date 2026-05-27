@@ -26,6 +26,12 @@ public sealed class EntraAuthorizationMiddleware(
             return;
         }
 
+        if (IsRuntimeBrokerEndpoint(request))
+        {
+            await next(context);
+            return;
+        }
+
         request.Headers.TryGetValues("Authorization", out var values);
         var result = await tokenValidator.ValidateAsync(values?.FirstOrDefault(), context.CancellationToken);
         if (result.Succeeded)
@@ -62,5 +68,11 @@ public sealed class EntraAuthorizationMiddleware(
             ?? principal.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value
             ?? principal.FindFirst("oid")?.Value
             ?? principal.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier")?.Value;
+    }
+
+    private static bool IsRuntimeBrokerEndpoint(HttpRequestData request)
+    {
+        return request.Url.AbsolutePath.Equals("/api/execution/tokens/graph", StringComparison.OrdinalIgnoreCase) ||
+            request.Url.AbsolutePath.Equals("/execution/tokens/graph", StringComparison.OrdinalIgnoreCase);
     }
 }

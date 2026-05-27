@@ -17,6 +17,8 @@
     "ControlPlane__Auth__AllowedGroupIds": "",
     "ControlPlane__Modules__AllowedRegistries": "ghcr.io,mcr.microsoft.com",
     "ControlPlane__ExecutionProvider": "LocalOrSimulated",
+    "ControlPlane__RuntimeBroker__SigningKey": "",
+    "ControlPlane__RuntimeBroker__BaseUrl": "http://localhost:7071/api",
     "ControlPlane__ContainerApps__SubscriptionId": "",
     "ControlPlane__ContainerApps__ResourceGroupName": "",
     "ControlPlane__ContainerApps__JobName": "",

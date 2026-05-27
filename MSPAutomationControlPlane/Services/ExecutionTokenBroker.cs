@@ -19,12 +19,10 @@ public sealed record ModuleRuntimeEnvironmentVariable(string Name, string Value)
 
 public sealed class ExecutionTokenBroker(
     ExecutionTokenBrokerOptions options,
-    IClientConnectionRepository clientConnectionRepository)
+    IClientConnectionRepository clientConnectionRepository,
+    RuntimeBrokerTokenService runtimeBrokerTokenService)
     : IExecutionTokenBroker
 {
-    private static readonly TokenRequestContext GraphTokenContext = new(["https://graph.microsoft.com/.default"]);
-    private readonly TokenCredential _controlPlaneCredential = new DefaultAzureCredential();
-
     public async Task<Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>> CreateEnvironmentAsync(
         JobRecord job,
         ModuleManifest manifest,
@@ -54,56 +52,34 @@ public sealed class ExecutionTokenBroker(
                 $"Client connection '{clientConnection.Id}' does not have a certificate reference.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.KeyVaultUri))
-        {
-            return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Failure(
-                "KeyVault__Uri or ControlPlane__KeyVault__Uri is required to mint execution tokens.");
-        }
-
         if (!CertificateReferenceResolver.TryResolveCertificateName(
             clientConnection.CertificateReference,
-            out var certificateName,
+            out _,
             out var error))
         {
             return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Failure(error!);
         }
 
-        X509Certificate2 certificate;
-        try
-        {
-            var certificateClient = new CertificateClient(new Uri(options.KeyVaultUri), _controlPlaneCredential);
-            certificate = await certificateClient.DownloadCertificateAsync(certificateName, cancellationToken: cancellationToken);
-        }
-        catch (Exception ex)
+        if (string.IsNullOrWhiteSpace(options.RuntimeBrokerBaseUrl))
         {
             return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Failure(
-                $"Could not load certificate '{certificateName}' for client connection '{clientConnection.Id}': {ex.Message}");
+                "ControlPlane__RuntimeBroker__BaseUrl or WEBSITE_HOSTNAME is required to broker runtime tokens.");
         }
 
-        if (!certificate.HasPrivateKey)
+        var token = runtimeBrokerTokenService.Issue(job, manifest);
+        if (!token.Succeeded)
         {
-            return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Failure(
-                $"Certificate '{certificateName}' for client connection '{clientConnection.Id}' does not include a private key.");
+            return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Failure(token.Errors);
         }
 
-        try
-        {
-            var clientCredential = new ClientCertificateCredential(
-                clientConnection.TenantId,
-                clientConnection.ExecutionAppClientId,
-                certificate);
-            var graphToken = await clientCredential.GetTokenAsync(GraphTokenContext, cancellationToken);
-
-            return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Success(
-            [
-                new ModuleRuntimeEnvironmentVariable("GRAPH_ACCESS_TOKEN", graphToken.Token)
-            ]);
-        }
-        catch (Exception ex)
-        {
-            return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Failure(
-                $"Could not mint Microsoft Graph token for client connection '{clientConnection.Id}': {ex.Message}");
-        }
+        return Result<IReadOnlyList<ModuleRuntimeEnvironmentVariable>>.Success(
+        [
+            new ModuleRuntimeEnvironmentVariable(
+                "CONTROL_PLANE_RUNTIME_TOKEN_URL",
+                $"{options.RuntimeBrokerBaseUrl.TrimEnd('/')}/execution/tokens/graph"),
+            new ModuleRuntimeEnvironmentVariable("CONTROL_PLANE_RUNTIME_TOKEN", token.Value!.Token),
+            new ModuleRuntimeEnvironmentVariable("CONTROL_PLANE_RUNTIME_TOKEN_EXPIRES_ON", token.Value.ExpiresAt.ToString("o"))
+        ]);
     }
 
     private static bool RequiresMicrosoftGraph(ModuleManifest manifest)
@@ -116,14 +92,13 @@ public sealed class ExecutionTokenBroker(
 
 public sealed class ExecutionTokenBrokerOptions
 {
-    public string? KeyVaultUri { get; init; }
+    public string? RuntimeBrokerBaseUrl { get; init; }
 
     public static ExecutionTokenBrokerOptions FromEnvironment()
     {
         return new ExecutionTokenBrokerOptions
         {
-            KeyVaultUri = Environment.GetEnvironmentVariable("ControlPlane__KeyVault__Uri") ??
-                Environment.GetEnvironmentVariable("KeyVault__Uri")
+            RuntimeBrokerBaseUrl = RuntimeBrokerTokenOptions.FromEnvironment().BaseUrl
         };
     }
 }

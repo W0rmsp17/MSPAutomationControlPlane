@@ -29,6 +29,11 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+resource "random_password" "runtime_broker_signing_key" {
+  length  = 48
+  special = false
+}
+
 locals {
   normalized_prefix = lower(replace(var.name_prefix, "-", ""))
   suffix            = random_string.suffix.result
@@ -182,6 +187,8 @@ resource "azurerm_windows_function_app" "control_api" {
     ControlPlane__TablePrefix                      = var.table_prefix
     ControlPlane__Modules__AllowedRegistries       = join(",", var.allowed_module_registries)
     ControlPlane__ExecutionProvider                = var.execution_provider
+    ControlPlane__RuntimeBroker__SigningKey        = random_password.runtime_broker_signing_key.result
+    ControlPlane__RuntimeBroker__BaseUrl           = "https://func-${var.name_prefix}-${local.resource_suffix}.azurewebsites.net/api"
     ControlPlane__ContainerApps__SubscriptionId    = var.subscription_id
     ControlPlane__ContainerApps__ResourceGroupName = azurerm_resource_group.main.name
     ControlPlane__ContainerApps__JobName           = azurerm_container_app_job.module_worker.name

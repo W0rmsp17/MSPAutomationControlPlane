@@ -20,6 +20,7 @@ var host = new HostBuilder()
         services.AddSingleton<LocalModuleRunner>();
         services.AddSingleton(ExecutionProviderOptions.FromEnvironment());
         services.AddSingleton(ExecutionTokenBrokerOptions.FromEnvironment());
+        services.AddSingleton(RuntimeBrokerTokenOptions.FromEnvironment());
         services.AddSingleton(ArtifactStorageOptions.FromEnvironment());
         services.AddSingleton<HttpClient>();
 
@@ -63,6 +64,7 @@ var host = new HostBuilder()
         services.AddSingleton<ProvisioningPlanService>();
         services.AddSingleton<JobService>();
         services.AddSingleton<JobResultCollector>();
+        services.AddSingleton<RuntimeBrokerTokenService>();
         services.AddSingleton<IExecutionTokenBroker, ExecutionTokenBroker>();
         services.AddSingleton<IModuleExecutionProvider>(provider =>
         {
