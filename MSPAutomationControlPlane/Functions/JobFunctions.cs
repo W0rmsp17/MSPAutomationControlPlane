@@ -7,7 +7,10 @@ using MSPAutomationControlPlane.Services;
 
 namespace MSPAutomationControlPlane.Functions;
 
-public sealed class JobFunctions(JobService jobService, JobResultCollector jobResultCollector)
+public sealed class JobFunctions(
+    JobService jobService,
+    JobResultCollector jobResultCollector,
+    JobArtifactService jobArtifactService)
 {
     [Function("ListJobs")]
     public async Task<HttpResponseData> ListJobs(
@@ -60,6 +63,36 @@ public sealed class JobFunctions(JobService jobService, JobResultCollector jobRe
         CancellationToken cancellationToken)
     {
         var result = await jobResultCollector.CollectAsync(id, cancellationToken);
+        if (!result.Succeeded)
+        {
+            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, result.Error);
+        }
+
+        return await request.WriteJsonAsync(HttpStatusCode.OK, result.Value!);
+    }
+
+    [Function("ListJobArtifacts")]
+    public async Task<HttpResponseData> ListJobArtifacts(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "jobs/{id}/artifacts")] HttpRequestData request,
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var result = await jobArtifactService.ListAsync(id, cancellationToken);
+        if (!result.Succeeded)
+        {
+            return await request.WriteProblemAsync(HttpStatusCode.BadRequest, result.Error);
+        }
+
+        return await request.WriteJsonAsync(HttpStatusCode.OK, result.Value!);
+    }
+
+    [Function("GetJobResultArtifact")]
+    public async Task<HttpResponseData> GetJobResultArtifact(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "jobs/{id}/artifacts/result")] HttpRequestData request,
+        string id,
+        CancellationToken cancellationToken)
+    {
+        var result = await jobArtifactService.GetResultAsync(id, cancellationToken);
         if (!result.Succeeded)
         {
             return await request.WriteProblemAsync(HttpStatusCode.BadRequest, result.Error);

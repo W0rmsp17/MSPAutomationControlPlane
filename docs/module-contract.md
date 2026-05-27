@@ -141,6 +141,17 @@ Modules that need Microsoft Graph should prefer the runtime broker exchange over
 
 `GRAPH_ACCESS_TOKEN` remains acceptable for local development and backward-compatible module testing, but deployed control plane execution should use the broker exchange so Graph bearer tokens are not written into Container Apps execution metadata.
 
+## Artifact Retrieval
+
+Operators and downstream systems should retrieve completed module artifacts through the control plane API, not directly through worker-scoped storage SAS values.
+
+```text
+GET /api/jobs/{jobId}/artifacts
+GET /api/jobs/{jobId}/artifacts/result
+```
+
+The first endpoint returns generic artifact descriptors. The second returns the raw structured module result JSON. This keeps the control plane module-agnostic while giving BYOAI, webhook, export, and dashboard consumers a stable data access path.
+
 ## Job Output
 
 The module should return structured output.
