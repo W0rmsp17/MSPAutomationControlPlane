@@ -20,13 +20,25 @@ Expected job states:
 - `Running`: the dispatcher started the configured execution provider.
 - `Succeeded`: the result collector found and stored the module output artifact.
 
-Run the smoke test after infrastructure, authentication, Function App, and frontend deployment:
+Run the registration-only smoke test after infrastructure, authentication, Function App, and frontend deployment:
 
 ```powershell
-.\scripts\test-cloud-smoke.ps1
+.\scripts\test-cloud-smoke.ps1 -RegistrationOnly
 ```
 
 The script reads deployed values from Terraform outputs and discovers the Static Web App/API auth app registration by display name. It uses the sample client connection, sample job request, and the real tenant health check module manifest by default.
+
+The default sample client connection is public-safe placeholder data. It can validate authentication, module registration, and client registration, but it cannot execute a real job because the placeholder Key Vault certificate does not exist.
+
+For a full execution smoke test, create untracked local files under `.work` with a real client connection and matching job request:
+
+```powershell
+.\scripts\test-cloud-smoke.ps1 `
+  -ClientConnectionPath ".work\client-connection-real.json" `
+  -JobRequestPath ".work\submit-job-real.json"
+```
+
+The real client connection must reference a certificate that exists in the deployed Key Vault and has the required Microsoft Graph permissions/admin consent in the target tenant.
 
 If Azure CLI has not yet consented to the API scope, run the scoped login once:
 

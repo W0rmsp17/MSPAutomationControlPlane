@@ -5,6 +5,8 @@ param(
     [string]$ModuleManifestPath = "modules/tenant-health-check/module.manifest.json",
     [string]$ClientConnectionPath = "samples/client-connection-contoso.json",
     [string]$JobRequestPath = "samples/submit-user-job.json",
+    [switch]$RegistrationOnly,
+    [switch]$AllowPlaceholderClient,
     [int]$DispatchWaitSeconds = 40,
     [int]$CollectAttempts = 6,
     [int]$CollectWaitSeconds = 20
@@ -119,6 +121,42 @@ function Assert-ApiRecord {
     }
 }
 
+function Test-SmokeInputs {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ClientConnectionJson,
+
+        [Parameter(Mandatory)]
+        [string]$JobRequestJson
+    )
+
+    $client = $ClientConnectionJson | ConvertFrom-Json -ErrorAction Stop
+    $job = $JobRequestJson | ConvertFrom-Json -ErrorAction Stop
+
+    if ($job.clientConnectionId -ne $client.id) {
+        throw "Job request clientConnectionId '$($job.clientConnectionId)' does not match client connection id '$($client.id)'."
+    }
+
+    $usesPlaceholderClient =
+        $client.tenantId -eq "11111111-1111-1111-1111-111111111111" -or
+        $client.executionAppClientId -eq "22222222-2222-2222-2222-222222222222" -or
+        $client.certificateReference -eq "kv://certificates/client-contoso-graph"
+
+    if ($usesPlaceholderClient -and -not $AllowPlaceholderClient -and -not $RegistrationOnly) {
+        throw @"
+The selected client connection uses public placeholder values and cannot run a live Container Apps job.
+
+For a registration-only API check, rerun with:
+  .\scripts\test-cloud-smoke.ps1 -RegistrationOnly
+
+For a full execution smoke test, create untracked local JSON files with a real client connection and matching job request, then run:
+  .\scripts\test-cloud-smoke.ps1 -ClientConnectionPath ".work\<client>.json" -JobRequestPath ".work\<job>.json"
+
+The client connection certificateReference must point to a certificate that exists in the deployed Key Vault.
+"@
+    }
+}
+
 function Invoke-RegistrationOrReuse {
     param(
         [Parameter(Mandatory)]
@@ -199,6 +237,8 @@ $moduleManifest = Get-RequiredFileContent -Path $ModuleManifestPath
 $clientConnection = Get-RequiredFileContent -Path $ClientConnectionPath
 $jobRequest = Get-RequiredFileContent -Path $JobRequestPath
 
+Test-SmokeInputs -ClientConnectionJson $clientConnection -JobRequestJson $jobRequest
+
 Invoke-RegistrationOrReuse `
     -Path "modules" `
     -Body $moduleManifest `
@@ -210,6 +250,11 @@ Invoke-RegistrationOrReuse `
     -Body $clientConnection `
     -SuccessMessage "Client connection registered." `
     -AlreadyRegisteredMessage "Client connection already registered; reusing existing record."
+
+if ($RegistrationOnly) {
+    Write-Host "Registration-only cloud smoke completed. Job execution was skipped." -ForegroundColor Green
+    return
+}
 
 $job = Invoke-ControlPlaneApi -Method "Post" -Path "jobs" -Body $jobRequest
 Assert-ApiRecord -Value $job -Operation "Submit job" -RequiredProperty "id"
