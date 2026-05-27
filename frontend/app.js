@@ -4,6 +4,7 @@ const state = {
   auth: config.auth || {},
   msalClient: null,
   msalAccount: null,
+  authInitialized: false,
   selectedClientId: null,
   clients: [],
   modules: [],
@@ -178,48 +179,60 @@ function endpoint(path) {
 }
 
 function authConfigured() {
-  return Boolean(state.auth.tenantId && state.auth.clientId && state.auth.apiScope && window.msal);
+  return Boolean(state.auth.tenantId && state.auth.clientId && state.auth.apiScope);
 }
 
 async function initializeAuth() {
   if (!authConfigured()) {
+    throw new Error("Authentication is not configured for this deployment.");
+  }
+
+  if (!window.msal) {
+    throw new Error("MSAL did not load. Refresh the page and check that the Microsoft authentication script is not blocked.");
+  }
+
+  if (!state.msalClient) {
+    state.msalClient = new msal.PublicClientApplication({
+      auth: {
+        clientId: state.auth.clientId,
+        authority: `https://login.microsoftonline.com/${state.auth.tenantId}`,
+        redirectUri: window.location.origin,
+        navigateToLoginRequestUrl: false
+      },
+      cache: {
+        cacheLocation: "localStorage",
+        storeAuthStateInCookie: true
+      }
+    });
+  }
+
+  if (state.authInitialized) {
     return;
   }
 
-  state.msalClient = new msal.PublicClientApplication({
-    auth: {
-      clientId: state.auth.clientId,
-      authority: `https://login.microsoftonline.com/${state.auth.tenantId}`,
-      redirectUri: window.location.origin
-    },
-    cache: {
-      cacheLocation: "sessionStorage"
-    }
-  });
-
   const redirectResult = await state.msalClient.handleRedirectPromise();
   state.msalAccount = redirectResult?.account || state.msalClient.getAllAccounts()[0] || null;
+  state.authInitialized = true;
   if (!state.msalAccount) {
     await state.msalClient.loginRedirect({
       scopes: [state.auth.apiScope]
     });
+    throw new Error("Sign-in started. Complete the Microsoft sign-in prompt to continue.");
   }
 }
 
 async function acquireAccessToken() {
-  if (!authConfigured()) {
-    return null;
-  }
-
-  if (!state.msalAccount) {
-    await initializeAuth();
-  }
+  await initializeAuth();
 
   try {
     const result = await state.msalClient.acquireTokenSilent({
       account: state.msalAccount,
       scopes: [state.auth.apiScope]
     });
+    if (!result.accessToken) {
+      throw new Error("Microsoft sign-in completed but no API access token was returned.");
+    }
+
     return result.accessToken;
   } catch (error) {
     if (error instanceof msal.InteractionRequiredAuthError) {
@@ -227,7 +240,7 @@ async function acquireAccessToken() {
         account: state.msalAccount,
         scopes: [state.auth.apiScope]
       });
-      return null;
+      throw new Error("Additional consent is required. Complete the Microsoft prompt to continue.");
     }
 
     throw error;
@@ -240,6 +253,10 @@ async function api(path, options = {}) {
   }
 
   const accessToken = await acquireAccessToken();
+  if (!accessToken) {
+    throw new Error("A bearer token is required before calling the control plane API.");
+  }
+
   const response = await fetch(endpoint(path), {
     ...options,
     headers: {

@@ -19,6 +19,24 @@
       ]
     },
     {
+      "route": "/index.html",
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "route": "/app.js",
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
+      "route": "/app-config.js",
+      "headers": {
+        "Cache-Control": "no-store"
+      }
+    },
+    {
       "route": "/*",
       "allowedRoles": [
         "authenticated"
