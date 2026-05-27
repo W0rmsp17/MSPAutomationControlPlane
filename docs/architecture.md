@@ -148,6 +148,8 @@ Each module can package its own runtime, for example:
 
 The control plane starts or triggers workers with a standard job envelope. The worker retrieves required secrets through approved references and writes structured output.
 
+Trigger policy is owned by the control plane, not by modules. Manual, scheduled, webhook, and event-driven triggers should all translate into the same standard job submission path. See `docs/trigger-model.md`.
+
 ### State Store
 
 Azure Table Storage is the recommended MVP state store because it is low-cost and good enough for simple entities:
