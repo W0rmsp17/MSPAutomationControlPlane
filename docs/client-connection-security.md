@@ -186,3 +186,25 @@ az login --tenant <target-tenant-id>
 The automated path creates the target tenant application and service principal metadata only. Certificate credential creation, Key Vault import, and admin consent remain explicit follow-up steps until the production bootstrap pack is expanded.
 
 When `-OutputPath` is supplied, the helper also writes a `.next-steps.md` file beside the generated JSON. This companion file lists the remaining target tenant and MSP Key Vault actions required before the connection should be marked `Ready`.
+
+## Runtime Token Broker
+
+The Container Apps execution provider asks the execution token broker for runtime environment values before it starts a module job.
+
+For modules that declare Microsoft Graph permissions, the broker:
+
+- loads the client connection
+- resolves the configured Key Vault certificate reference
+- downloads the certificate through the control plane managed identity
+- requests a client-credential token for the client tenant using `https://graph.microsoft.com/.default`
+- injects the short-lived token into the module worker as `GRAPH_ACCESS_TOKEN`
+
+Provisioning remains outside the execution path. The broker does not create app registrations, grant permissions, upload certificates, or mark client connections as ready. It only mints a token when the connection is already configured.
+
+Runtime-resolvable certificate references are:
+
+- a Key Vault certificate name, for example `client-contoso-graph`
+- `kv://certificates/client-contoso-graph`
+- a Key Vault certificate URI such as `https://<vault>.vault.azure.net/certificates/client-contoso-graph/<version>`
+
+Logical placeholders such as `kv://clients/client-contoso/graph-certificate` are useful for early design notes, but they are not valid for runtime token minting.

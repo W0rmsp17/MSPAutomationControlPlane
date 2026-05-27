@@ -19,6 +19,7 @@ var host = new HostBuilder()
         services.AddSingleton(LocalModuleRunnerOptions.FromEnvironment());
         services.AddSingleton<LocalModuleRunner>();
         services.AddSingleton(ExecutionProviderOptions.FromEnvironment());
+        services.AddSingleton(ExecutionTokenBrokerOptions.FromEnvironment());
         services.AddSingleton(ArtifactStorageOptions.FromEnvironment());
         services.AddSingleton<HttpClient>();
 
@@ -61,6 +62,7 @@ var host = new HostBuilder()
         services.AddSingleton<ReadinessService>();
         services.AddSingleton<JobService>();
         services.AddSingleton<JobResultCollector>();
+        services.AddSingleton<IExecutionTokenBroker, ExecutionTokenBroker>();
         services.AddSingleton<IModuleExecutionProvider>(provider =>
         {
             var options = provider.GetRequiredService<ExecutionProviderOptions>();
@@ -70,6 +72,7 @@ var host = new HostBuilder()
                     ContainerAppsExecutionOptions.FromEnvironment(),
                     provider.GetRequiredService<ArtifactStorageOptions>(),
                     provider.GetRequiredService<IModuleRepository>(),
+                    provider.GetRequiredService<IExecutionTokenBroker>(),
                     provider.GetRequiredService<HttpClient>());
             }
 

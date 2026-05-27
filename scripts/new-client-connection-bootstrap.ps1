@@ -35,7 +35,7 @@ if ([string]::IsNullOrWhiteSpace($AppDisplayName)) {
 }
 
 if ([string]::IsNullOrWhiteSpace($CertificateReference)) {
-    $CertificateReference = "kv://clients/$ClientConnectionId/graph-certificate"
+    $CertificateReference = "kv://certificates/$ClientConnectionId-graph"
 }
 
 function Invoke-AzJson {
@@ -149,7 +149,7 @@ if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
         "1. Register or update the generated connection JSON in the MSP control plane.",
         "2. Confirm the target tenant app registration and service principal IDs are correct.",
         "3. Add a certificate credential to the target app registration.",
-        "4. Store the certificate private key in MSP Key Vault at: $CertificateReference",
+        "4. Store the certificate private key in MSP Key Vault as a certificate matching: $CertificateReference",
         "5. Grant and admin-consent the required Microsoft Graph application permissions:",
         ($GraphApplicationPermissions | ForEach-Object { "   - $_" }),
         "6. Update the client connection readiness to Ready after permissions and certificate access are confirmed.",

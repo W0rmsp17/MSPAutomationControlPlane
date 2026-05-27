@@ -45,6 +45,27 @@ public sealed class ReadinessService(
             blockingIssues.Add($"Client connection '{clientConnection.Id}' readiness is '{clientConnection.ReadinessStatus}'.");
         }
 
+        if (module.Manifest.RequiredPermissions.Any(permission =>
+                string.Equals(permission.Provider, "MicrosoftGraph", StringComparison.OrdinalIgnoreCase)))
+        {
+            if (string.IsNullOrWhiteSpace(clientConnection.ExecutionAppClientId))
+            {
+                blockingIssues.Add($"Client connection '{clientConnection.Id}' does not have an execution app client ID.");
+            }
+
+            if (string.IsNullOrWhiteSpace(clientConnection.CertificateReference))
+            {
+                blockingIssues.Add($"Client connection '{clientConnection.Id}' does not have a certificate reference.");
+            }
+            else if (!CertificateReferenceResolver.TryResolveCertificateName(
+                clientConnection.CertificateReference,
+                out _,
+                out var certificateReferenceError))
+            {
+                blockingIssues.Add(certificateReferenceError!);
+            }
+        }
+
         if (clientConnection.EnabledModuleIds.Count > 0 &&
             !clientConnection.EnabledModuleIds.Contains(module.Manifest.Id, StringComparer.OrdinalIgnoreCase))
         {

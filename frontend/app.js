@@ -19,7 +19,7 @@ const samples = {
     tenantId: "00000000-0000-0000-0000-000000000000",
     executionMode: "Central",
     executionAppClientId: "00000000-0000-0000-0000-000000000000",
-    certificateReference: "kv://clients/client-contoso/graph-certificate",
+    certificateReference: "kv://certificates/client-contoso-graph",
     servicePrincipalObjectId: "00000000-0000-0000-0000-000000000000",
     readinessStatus: "PendingConsent",
     configuredPermissions: [
@@ -101,7 +101,7 @@ const samples = {
     tenantId: "00000000-0000-0000-0000-000000000000",
     executionMode: "Central",
     executionAppClientId: "00000000-0000-0000-0000-000000000000",
-    certificateReference: "kv://clients/client-account-report-demo/graph-certificate",
+    certificateReference: "kv://certificates/client-account-report-demo-graph",
     servicePrincipalObjectId: "00000000-0000-0000-0000-000000000000",
     readinessStatus: "Ready",
     configuredPermissions: [

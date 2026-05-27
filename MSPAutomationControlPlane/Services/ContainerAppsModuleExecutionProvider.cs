@@ -15,6 +15,7 @@ public sealed class ContainerAppsModuleExecutionProvider(
     ContainerAppsExecutionOptions options,
     ArtifactStorageOptions artifactStorageOptions,
     IModuleRepository moduleRepository,
+    IExecutionTokenBroker executionTokenBroker,
     HttpClient httpClient) : IModuleExecutionProvider
 {
     private static readonly TokenRequestContext ArmTokenContext = new(["https://management.azure.com/.default"]);
@@ -37,11 +38,17 @@ public sealed class ContainerAppsModuleExecutionProvider(
             return ModuleExecutionResult.Failure($"Module '{job.ModuleId}' version '{job.ModuleVersion}' was not found.");
         }
 
+        var runtimeEnvironment = await executionTokenBroker.CreateEnvironmentAsync(job, module.Manifest, cancellationToken);
+        if (!runtimeEnvironment.Succeeded)
+        {
+            return ModuleExecutionResult.Failure(runtimeEnvironment.Error ?? "Execution token broker failed.");
+        }
+
         var accessToken = await _credential.GetTokenAsync(ArmTokenContext, cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Post, BuildStartUri());
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
         request.Content = new StringContent(
-            JsonSerializer.Serialize(CreateStartRequest(job, actor, module.Manifest), JsonOptions),
+            JsonSerializer.Serialize(CreateStartRequest(job, actor, module.Manifest, runtimeEnvironment.Value!), JsonOptions),
             Encoding.UTF8,
             "application/json");
 
@@ -72,10 +79,30 @@ public sealed class ContainerAppsModuleExecutionProvider(
             $"https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.App/jobs/{jobName}/start?api-version={apiVersion}");
     }
 
-    private object CreateStartRequest(JobRecord job, string actor, ModuleManifest manifest)
+    private object CreateStartRequest(
+        JobRecord job,
+        string actor,
+        ModuleManifest manifest,
+        IReadOnlyList<ModuleRuntimeEnvironmentVariable> runtimeEnvironment)
     {
         var inputJson = JsonSerializer.Serialize(CreateModuleInput(job, actor), JsonOptions);
         var inputBase64 = Convert.ToBase64String(Encoding.UTF8.GetBytes(inputJson));
+        var environment = new List<object>
+        {
+            new { name = "CONTROL_PLANE_JOB_ID", value = job.Id },
+            new { name = "CONTROL_PLANE_MODULE_ID", value = job.ModuleId },
+            new { name = "CONTROL_PLANE_MODULE_VERSION", value = job.ModuleVersion },
+            new { name = "CONTROL_PLANE_CLIENT_CONNECTION_ID", value = job.TenantContext.ClientId },
+            new { name = "CONTROL_PLANE_REQUESTED_BY", value = actor },
+            new { name = "CONTROL_PLANE_JOB_INPUT_BASE64", value = inputBase64 },
+            new { name = "CONTROL_PLANE_OUTPUT_BLOB_URI", value = BuildResultBlobUri(job.Id, manifest.TimeoutSeconds) }
+        };
+
+        environment.AddRange(runtimeEnvironment.Select(variable => new
+        {
+            name = variable.Name,
+            value = variable.Value
+        }));
 
         return new
         {
@@ -90,16 +117,7 @@ public sealed class ContainerAppsModuleExecutionProvider(
                         cpu = options.Cpu,
                         memory = options.Memory
                     },
-                    env = new[]
-                    {
-                        new { name = "CONTROL_PLANE_JOB_ID", value = job.Id },
-                        new { name = "CONTROL_PLANE_MODULE_ID", value = job.ModuleId },
-                        new { name = "CONTROL_PLANE_MODULE_VERSION", value = job.ModuleVersion },
-                        new { name = "CONTROL_PLANE_CLIENT_CONNECTION_ID", value = job.TenantContext.ClientId },
-                        new { name = "CONTROL_PLANE_REQUESTED_BY", value = actor },
-                        new { name = "CONTROL_PLANE_JOB_INPUT_BASE64", value = inputBase64 },
-                        new { name = "CONTROL_PLANE_OUTPUT_BLOB_URI", value = BuildResultBlobUri(job.Id, manifest.TimeoutSeconds) }
-                    }
+                    env = environment
                 }
             }
         };

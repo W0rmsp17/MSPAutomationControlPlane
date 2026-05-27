@@ -4,6 +4,7 @@ param(
     [string]$SourcePath = "frontend",
     [string]$PackageRoot = ".deploy",
     [string]$AuthAppDisplayName = "MSP Automation Control Plane - Static Web App",
+    [string]$StaticWebAppsCliPackage = "@azure/static-web-apps-cli@2.0.8",
     [switch]$SkipDeploy
 )
 
@@ -19,12 +20,18 @@ function Invoke-CheckedCommand {
         [string]$FilePath,
 
         [Parameter(Mandatory)]
-        [string[]]$Arguments
+        [string[]]$Arguments,
+
+        [string]$SafeDescription
     )
 
     & $FilePath @Arguments
     if ($LASTEXITCODE -ne 0) {
-        throw "Command failed: $FilePath $($Arguments -join ' ')"
+        if ([string]::IsNullOrWhiteSpace($SafeDescription)) {
+            $SafeDescription = $FilePath
+        }
+
+        throw "Command failed: $SafeDescription"
     }
 }
 
@@ -111,14 +118,14 @@ if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($deploymentToken)) {
 
 Invoke-CheckedCommand -FilePath "npx" -Arguments @(
     "--yes",
-    "@azure/static-web-apps-cli",
+    $StaticWebAppsCliPackage,
     "deploy",
     $publishPath,
     "--deployment-token",
     $deploymentToken,
     "--env",
     "production"
-)
+) -SafeDescription "npx $StaticWebAppsCliPackage deploy <publishPath> --deployment-token <redacted> --env production"
 
 Write-Host "Static Web App deployed: $staticWebAppName" -ForegroundColor Green
 Write-Host "API base URL: $apiBaseUrl"
