@@ -72,7 +72,6 @@ try {
     if (-not $SkipTargetAppUpdate) {
         az ad app credential reset `
             --id $ExecutionAppClientId `
-            --tenant $TargetTenantId `
             --cert "@$cerPath" `
             --append `
             --display-name $CertificateName `

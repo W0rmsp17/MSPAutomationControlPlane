@@ -38,6 +38,8 @@ if ([string]::IsNullOrWhiteSpace($CertificateReference)) {
     $CertificateReference = "kv://certificates/$ClientConnectionId-graph"
 }
 
+$repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
+
 function Invoke-AzJson {
     param(
         [Parameter(Mandatory)]
@@ -54,6 +56,25 @@ function Invoke-AzJson {
     }
 
     return $json | ConvertFrom-Json
+}
+
+function Get-GraphApplicationRoleId {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Permission
+    )
+
+    $knownGraphApplicationRoles = @{
+        "Directory.Read.All"    = "7ab1d382-f21e-4acd-a863-ba3e13f7da61"
+        "Organization.Read.All" = "498476ce-e0fe-48b0-b801-37ba7e2685c6"
+        "User.Read.All"         = "df021288-bdef-4463-88db-98f22de89214"
+    }
+
+    if (-not $knownGraphApplicationRoles.ContainsKey($Permission)) {
+        throw "Unknown Microsoft Graph application permission '$Permission'. Add its app role ID to scripts/new-client-connection-bootstrap.ps1 before using automated app registration mode."
+    }
+
+    return $knownGraphApplicationRoles[$Permission]
 }
 
 $executionAppClientId = if ([string]::IsNullOrWhiteSpace($ExecutionAppClientId)) { "00000000-0000-0000-0000-000000000000" } else { $ExecutionAppClientId }
@@ -76,6 +97,36 @@ if ($CreateAppRegistration) {
         "AzureADMyOrg"
     )
 
+    $graphResourceAccess = @($GraphApplicationPermissions | Sort-Object -Unique | ForEach-Object {
+            [ordered]@{
+                id   = Get-GraphApplicationRoleId -Permission $_
+                type = "Role"
+            }
+        })
+
+    $graphRequiredResource = [ordered]@{
+        resourceAppId  = "00000003-0000-0000-c000-000000000000"
+        resourceAccess = $graphResourceAccess
+    }
+
+    $requiredResourceAccessPath = Join-Path $repoRoot ".work/target-app/$ClientConnectionId-required-resource-access.json"
+    $requiredResourceAccessParent = Split-Path -Parent $requiredResourceAccessPath
+    if (-not (Test-Path $requiredResourceAccessParent)) {
+        New-Item -ItemType Directory -Path $requiredResourceAccessParent | Out-Null
+    }
+
+    $graphRequiredResourceJson = $graphRequiredResource | ConvertTo-Json -Depth 8
+    Set-Content -Path $requiredResourceAccessPath -Value "[$graphRequiredResourceJson]" -Encoding utf8
+
+    az ad app update `
+        --id $app.appId `
+        --required-resource-accesses "@$requiredResourceAccessPath" `
+        --output none
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Failed to configure Microsoft Graph application permissions on target app registration '$($app.appId)'."
+    }
+
     $sp = Invoke-AzJson -Arguments @(
         "ad",
         "sp",
@@ -87,7 +138,7 @@ if ($CreateAppRegistration) {
     $executionAppClientId = $app.appId
     $servicePrincipalObjectId = $sp.id
     $readinessStatus = if ($AdminConsented) { "Ready" } else { "PendingConsent" }
-    $notes = "Target app registration created. Add certificate credentials and grant/admin-consent required permissions before production use."
+    $notes = "Target app registration created with required Microsoft Graph application permissions. Add certificate credentials and grant/admin-consent required permissions before production use."
 }
 elseif (-not [string]::IsNullOrWhiteSpace($ExecutionAppClientId) -or -not [string]::IsNullOrWhiteSpace($ServicePrincipalObjectId)) {
     $readinessStatus = if ($AdminConsented) { "Ready" } else { "PendingConsent" }
@@ -146,6 +197,7 @@ if (-not [string]::IsNullOrWhiteSpace($OutputPath)) {
         "Tenant ID: $TenantId",
         "Readiness: $readinessStatus",
         "",
+        "Target tenant Azure subscription required: No. This bootstrap uses Entra ID app registration and service principal APIs.",
         "1. Register or update the generated connection JSON in the MSP control plane.",
         "2. Confirm the target tenant app registration and service principal IDs are correct.",
         "3. Add a certificate credential to the target app registration.",

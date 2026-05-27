@@ -173,7 +173,7 @@ This path is useful when the target tenant administrator creates the app registr
 Automated target app registration mode:
 
 ```powershell
-az login --tenant <target-tenant-id>
+az login --tenant <target-tenant-id> --use-device-code --allow-no-subscriptions
 
 .\scripts\new-client-connection-bootstrap.ps1 `
   -ClientConnectionId "client-contoso" `
@@ -183,7 +183,15 @@ az login --tenant <target-tenant-id>
   -OutputPath ".\samples\client-connection-contoso.json"
 ```
 
-The automated path creates the target tenant application and service principal metadata only. Certificate credential creation, Key Vault import, and admin consent remain explicit follow-up steps until the production bootstrap pack is expanded.
+The target tenant does not need an Azure subscription for this step. The bootstrap uses Entra ID only.
+
+The automated path creates the target tenant application and service principal metadata, and configures the Microsoft Graph application permissions declared through `-GraphApplicationPermissions`. Certificate credential creation, Key Vault import, and admin consent remain explicit follow-up steps until the production bootstrap pack is expanded.
+
+Grant target tenant admin consent after the required permissions are on the app registration:
+
+```powershell
+az ad app permission admin-consent --id "<target-app-client-id>"
+```
 
 When `-OutputPath` is supplied, the helper also writes a `.next-steps.md` file beside the generated JSON. This companion file lists the remaining target tenant and MSP Key Vault actions required before the connection should be marked `Ready`.
 
