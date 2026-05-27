@@ -1,4 +1,6 @@
 using System.Net;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using MSPAutomationControlPlane.Domain;
 using MSPAutomationControlPlane.Repositories;
 using MSPAutomationControlPlane.Services;
@@ -55,6 +57,19 @@ public sealed class ModuleRegistryServiceTests
         Assert.Equal("tenant-health-check", result.Value!.Manifest.Id);
     }
 
+    [Fact]
+    public async Task RegisterAsync_ReturnedRegistration_Serializes_WhenExecutionContractIsOmitted()
+    {
+        var service = CreateService("{}");
+        var manifest = JsonSerializer.Deserialize<ModuleManifest>(ValidManifestJson, JsonOptions)!;
+
+        var result = await service.RegisterAsync(manifest, CancellationToken.None);
+
+        Assert.True(result.Succeeded, string.Join(Environment.NewLine, result.Errors));
+        var json = JsonSerializer.Serialize(result.Value, JsonOptions);
+        Assert.Contains("\"executionContract\":{}", json);
+    }
+
     private static ModuleRegistryService CreateService(string responseBody)
     {
         var moduleRepository = new InMemoryModuleRepository();
@@ -99,6 +114,11 @@ public sealed class ModuleRegistryServiceTests
           ]
         }
         """;
+
+    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
+    {
+        Converters = { new JsonStringEnumConverter() }
+    };
 
     private sealed class StaticResponseHandler(string responseBody) : HttpMessageHandler
     {

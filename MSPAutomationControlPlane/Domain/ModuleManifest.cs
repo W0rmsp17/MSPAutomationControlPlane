@@ -4,6 +4,8 @@ namespace MSPAutomationControlPlane.Domain;
 
 public sealed class ModuleManifest
 {
+    private static readonly JsonElement EmptyObject = CreateEmptyObject();
+
     public string SchemaVersion { get; init; } = "1.0";
 
     public required string Id { get; init; }
@@ -32,7 +34,7 @@ public sealed class ModuleManifest
 
     public DataHandlingMetadata? DataHandling { get; init; }
 
-    public JsonElement ExecutionContract { get; init; }
+    public JsonElement ExecutionContract { get; init; } = EmptyObject.Clone();
 
     public IReadOnlyList<TargetScopeType> SupportedScopes { get; init; } = [TargetScopeType.Tenant];
 
@@ -41,6 +43,12 @@ public sealed class ModuleManifest
     public IReadOnlyList<RequiredPermission> RequiredPermissions { get; init; } = [];
 
     public JsonElement OutputsSchema { get; init; }
+
+    private static JsonElement CreateEmptyObject()
+    {
+        using var document = JsonDocument.Parse("{}");
+        return document.RootElement.Clone();
+    }
 }
 
 public sealed class DataHandlingMetadata
