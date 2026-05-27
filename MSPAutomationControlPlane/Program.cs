@@ -60,6 +60,7 @@ var host = new HostBuilder()
         services.AddSingleton<ModuleRegistryService>();
         services.AddSingleton<NotificationSubscriptionService>();
         services.AddSingleton<ReadinessService>();
+        services.AddSingleton<ProvisioningPlanService>();
         services.AddSingleton<JobService>();
         services.AddSingleton<JobResultCollector>();
         services.AddSingleton<IExecutionTokenBroker, ExecutionTokenBroker>();

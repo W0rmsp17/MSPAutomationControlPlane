@@ -208,3 +208,27 @@ Runtime-resolvable certificate references are:
 - a Key Vault certificate URI such as `https://<vault>.vault.azure.net/certificates/client-contoso-graph/<version>`
 
 Logical placeholders such as `kv://clients/client-contoso/graph-certificate` are useful for early design notes, but they are not valid for runtime token minting.
+
+## Provisioning Plan API
+
+The control plane exposes `POST /api/provisioning/plan` to generate an operator-facing plan for enabling a module against a client connection.
+
+Request:
+
+```json
+{
+  "clientConnectionId": "client-contoso",
+  "moduleId": "msp-account-management-report",
+  "moduleVersion": "0.1.2"
+}
+```
+
+The response includes:
+
+- client and module identifiers
+- required module permissions
+- readiness blocking issues
+- recommended certificate reference
+- ordered provisioning steps with owner and status
+
+This endpoint is intentionally advisory. It does not create app registrations, grant Graph permissions, upload certificates, or change client readiness. Those actions belong to the access provisioning workflow and should require explicit operator/admin action.
