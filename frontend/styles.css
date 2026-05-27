@@ -485,6 +485,10 @@ textarea {
   margin-bottom: 14px;
 }
 
+.derived-list {
+  margin-top: 14px;
+}
+
 .finding {
   border-left: 3px solid var(--brand);
   padding-left: 10px;

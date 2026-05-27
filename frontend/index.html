@@ -22,6 +22,7 @@
           <button class="nav-item" data-view="modules">Modules</button>
           <button class="nav-item" data-view="demo">Demo</button>
           <button class="nav-item" data-view="jobs">Jobs</button>
+          <button class="nav-item" data-view="data-consumers">Data Consumers</button>
           <button class="nav-item" data-view="notifications">Notifications</button>
           <button class="nav-item" data-view="audit">Audit</button>
         </nav>
@@ -224,6 +225,59 @@
                 <button class="button primary" type="submit">Submit job</button>
               </div>
             </form>
+          </div>
+        </section>
+
+        <section id="data-consumers" class="view">
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Registered Consumers</h2>
+              </div>
+              <div id="data-consumers-list" class="list"></div>
+            </div>
+            <form id="data-consumer-form" class="panel form-panel">
+              <div class="panel-header">
+                <h2>Register Consumer</h2>
+              </div>
+              <label for="data-consumer-json">Connector JSON</label>
+              <textarea id="data-consumer-json" spellcheck="false"></textarea>
+              <button class="button primary" type="submit">Register consumer</button>
+            </form>
+          </div>
+          <div class="split-layout">
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Process Artifact</h2>
+              </div>
+              <div class="compose-grid">
+                <div>
+                  <label for="artifact-job-id">Job ID</label>
+                  <input id="artifact-job-id" type="text" placeholder="job-...">
+                </div>
+                <div>
+                  <label for="artifact-name">Artifact</label>
+                  <input id="artifact-name" type="text" value="result">
+                </div>
+              </div>
+              <label for="artifact-process-json">Process request JSON</label>
+              <textarea id="artifact-process-json" class="compact-textarea" spellcheck="false"></textarea>
+              <div class="button-row">
+                <button id="process-artifact-button" class="button primary" type="button">Process artifact</button>
+                <button id="list-derived-artifacts-button" class="button secondary" type="button">List derived</button>
+              </div>
+              <div id="derived-artifacts-list" class="list derived-list"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-header">
+                <h2>Derived Artifact JSON</h2>
+              </div>
+              <div class="inline-form">
+                <input id="derived-artifact-id" type="text" placeholder="derived-...">
+                <button id="load-derived-artifact-button" class="button secondary" type="button">Load</button>
+              </div>
+              <pre id="derived-artifact-output" class="json-output"></pre>
+            </div>
           </div>
         </section>
 

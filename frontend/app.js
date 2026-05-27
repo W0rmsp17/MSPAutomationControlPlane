@@ -9,6 +9,8 @@ const state = {
   clients: [],
   modules: [],
   jobs: [],
+  dataConsumers: [],
+  derivedArtifacts: [],
   notifications: [],
   auditEvents: []
 };
@@ -81,7 +83,7 @@ const samples = {
     source: {
       type: "git",
       repository: "https://github.com/W0rmsp17/MSPAccountManagementReport",
-      ref: "v0.1.2",
+      ref: "v0.1.3",
       manifestPath: "module.manifest.json"
     },
     registration: {
@@ -154,7 +156,7 @@ samples.job = {
 
 samples.accountReportJob = {
   moduleId: "msp-account-management-report",
-  moduleVersion: "0.1.2",
+  moduleVersion: "0.1.3",
   clientConnectionId: samples.accountReportClient.id,
   targetScope: {
     type: "Tenant",
@@ -165,6 +167,31 @@ samples.accountReportJob = {
     includeInactiveUsers: true,
     includeLicenseWaste: true,
     reportFormat: "markdown"
+  }
+};
+
+samples.dataConsumer = {
+  id: "consumer-account-summary-template",
+  displayName: "Account Summary Template Consumer",
+  type: "TemplateSummary",
+  enabled: true,
+  provider: "ControlPlaneTemplate",
+  promptTemplateId: "account-management-summary-v1",
+  policy: {
+    requiresManualRun: true,
+    storePrompt: false,
+    storeResponse: true,
+    allowPersonalData: true,
+    maxInputBytes: 262144
+  }
+};
+
+samples.artifactProcessRequest = {
+  connectorId: samples.dataConsumer.id,
+  promptTemplateId: "account-management-summary-v1",
+  parameters: {
+    audience: "MSP account manager",
+    tone: "concise"
   }
 };
 
@@ -771,6 +798,27 @@ function renderTimeline(targetId, events) {
   });
 }
 
+function renderDerivedArtifacts(items = state.derivedArtifacts) {
+  renderList("derived-artifacts-list", items, (artifact) => {
+    const item = listItem(
+      artifact.id,
+      `${artifact.jobId || ""} - ${artifact.sourceArtifactName || ""} - ${artifact.createdAt || ""}`,
+      artifact.connectorId || "consumer");
+
+    item.addEventListener("click", async () => {
+      el("artifact-job-id").value = artifact.jobId || el("artifact-job-id").value;
+      el("derived-artifact-id").value = artifact.id;
+      try {
+        const result = await api(`jobs/${encodeURIComponent(artifact.jobId)}/derived-artifacts/${encodeURIComponent(artifact.id)}`);
+        el("derived-artifact-output").textContent = pretty(result);
+      } catch (error) {
+        setMessage(error.message, "bad");
+      }
+    });
+    return item;
+  });
+}
+
 function render() {
   el("metric-clients").textContent = state.clients.length;
   el("metric-modules").textContent = state.modules.length;
@@ -804,6 +852,19 @@ function render() {
   renderList("notifications-list", state.notifications, (subscription) =>
     listItem(subscription.displayName || subscription.id, subscription.targetUrl || "", subscription.enabled ? "Enabled" : "Disabled"));
 
+  renderList("data-consumers-list", state.dataConsumers, (consumer) => {
+    const item = listItem(
+      consumer.displayName || consumer.id,
+      `${consumer.provider || ""} - ${consumer.promptTemplateId || ""}`,
+      consumer.enabled ? "Enabled" : "Disabled");
+
+    item.addEventListener("click", () => {
+      el("data-consumer-json").value = pretty(consumer);
+    });
+    return item;
+  });
+  renderDerivedArtifacts();
+
   renderList("jobs-list", state.jobs, (job) => {
     const item = listItem(
       job.id,
@@ -812,6 +873,7 @@ function render() {
 
     item.addEventListener("click", () => {
       el("job-id").value = job.id;
+      el("artifact-job-id").value = job.id;
       renderJobResult(job);
       el("job-output").textContent = pretty(job);
     });
@@ -860,10 +922,11 @@ async function refreshAll() {
     await api("health");
     setHealth("Healthy", "ok");
 
-    const [clients, modules, jobs, notifications, auditEvents] = await Promise.all([
+    const [clients, modules, jobs, dataConsumers, notifications, auditEvents] = await Promise.all([
       api("client-connections"),
       api("modules"),
       api("jobs"),
+      api("data-consumers"),
       api("notification-subscriptions"),
       api("audit-events")
     ]);
@@ -871,6 +934,7 @@ async function refreshAll() {
     state.clients = clients;
     state.modules = modules;
     state.jobs = jobs;
+    state.dataConsumers = dataConsumers;
     state.notifications = notifications;
     state.auditEvents = auditEvents;
     render();
@@ -1007,6 +1071,16 @@ function wireForms() {
     }
   });
 
+  el("data-consumer-form").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    try {
+      await submitJsonForm("data-consumer-json", "data-consumers");
+      setMessage("Data consumer registered.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
   el("import-module-button").addEventListener("click", async () => {
     try {
       await importModuleRelease(JSON.parse(el("module-import-json").value));
@@ -1081,6 +1155,57 @@ function wireForms() {
     }
   });
 
+  el("process-artifact-button").addEventListener("click", async () => {
+    try {
+      const jobId = el("artifact-job-id").value.trim();
+      const artifactName = el("artifact-name").value.trim() || "result";
+      if (!jobId) {
+        throw new Error("Job ID is required.");
+      }
+
+      const result = await api(`jobs/${encodeURIComponent(jobId)}/artifacts/${encodeURIComponent(artifactName)}/process`, {
+        method: "POST",
+        body: JSON.stringify(JSON.parse(el("artifact-process-json").value))
+      });
+      el("derived-artifact-id").value = result.id;
+      el("derived-artifact-output").textContent = pretty(result);
+      await loadDerivedArtifacts(jobId);
+      setMessage("Artifact processed.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("list-derived-artifacts-button").addEventListener("click", async () => {
+    try {
+      const jobId = el("artifact-job-id").value.trim();
+      if (!jobId) {
+        throw new Error("Job ID is required.");
+      }
+
+      await loadDerivedArtifacts(jobId);
+      setMessage("Derived artifacts loaded.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
+  el("load-derived-artifact-button").addEventListener("click", async () => {
+    try {
+      const jobId = el("artifact-job-id").value.trim();
+      const artifactId = el("derived-artifact-id").value.trim();
+      if (!jobId || !artifactId) {
+        throw new Error("Job ID and derived artifact ID are required.");
+      }
+
+      const result = await api(`jobs/${encodeURIComponent(jobId)}/derived-artifacts/${encodeURIComponent(artifactId)}`);
+      el("derived-artifact-output").textContent = pretty(result);
+      setMessage("Derived artifact loaded.");
+    } catch (error) {
+      setMessage(error.message, "bad");
+    }
+  });
+
   el("demo-import-module-button").addEventListener("click", async () => {
     try {
       await importModuleRelease(samples.accountReportImport);
@@ -1111,6 +1236,7 @@ function wireForms() {
       });
       el("demo-job-id").value = job.id;
       el("job-id").value = job.id;
+      el("artifact-job-id").value = job.id;
       renderDemoResult(job);
       await refreshAll();
       setMessage("Demo job submitted.");
@@ -1131,6 +1257,7 @@ function wireForms() {
       });
       renderDemoResult(job);
       el("job-id").value = job.id;
+      el("artifact-job-id").value = job.id;
       el("job-output").textContent = pretty(job);
       renderJobResult(job);
       await refreshAll();
@@ -1139,6 +1266,13 @@ function wireForms() {
       setMessage(error.message, "bad");
     }
   });
+}
+
+async function loadDerivedArtifacts(jobId) {
+  const artifacts = await api(`jobs/${encodeURIComponent(jobId)}/derived-artifacts`);
+  state.derivedArtifacts = artifacts;
+  renderDerivedArtifacts(artifacts);
+  return artifacts;
 }
 
 function wireSettings() {
@@ -1165,6 +1299,8 @@ function seedTextareas() {
   el("notification-json").value = pretty(samples.notification);
   el("demo-client-json").value = pretty(samples.accountReportClient);
   el("demo-job-json").value = pretty(samples.accountReportJob);
+  el("data-consumer-json").value = pretty(samples.dataConsumer);
+  el("artifact-process-json").value = pretty(samples.artifactProcessRequest);
   renderClientPreview();
   renderModulePreview();
 }
