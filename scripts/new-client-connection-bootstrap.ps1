@@ -77,7 +77,7 @@ function Get-GraphApplicationRoleId {
     return $knownGraphApplicationRoles[$Permission]
 }
 
-$executionAppClientId = if ([string]::IsNullOrWhiteSpace($ExecutionAppClientId)) { "00000000-0000-0000-0000-000000000000" } else { $ExecutionAppClientId }
+$executionAppClientId = $ExecutionAppClientId
 $servicePrincipalObjectId = if ([string]::IsNullOrWhiteSpace($ServicePrincipalObjectId)) { $null } else { $ServicePrincipalObjectId }
 $readinessStatus = "Draft"
 $notes = "Manual target app registration values must be supplied before this connection is ready."
@@ -148,6 +148,10 @@ elseif (-not [string]::IsNullOrWhiteSpace($ExecutionAppClientId) -or -not [strin
     else {
         "Manual target app registration metadata supplied. Grant/admin-consent required permissions before marking Ready."
     }
+}
+
+if ([string]::IsNullOrWhiteSpace($executionAppClientId)) {
+    $executionAppClientId = "00000000-0000-0000-0000-000000000000"
 }
 
 $configuredPermissions = foreach ($permission in $GraphApplicationPermissions) {

@@ -2,7 +2,7 @@
   "source": {
     "type": "git",
     "repository": "https://github.com/W0rmsp17/MSPAccountManagementReport",
-    "ref": "v0.1.2",
+    "ref": "v0.1.3",
     "manifestPath": "module.manifest.json"
   },
   "registration": {

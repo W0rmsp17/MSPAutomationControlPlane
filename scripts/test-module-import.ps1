@@ -4,7 +4,7 @@ param(
     [string]$ImportRequestPath = "samples/import-account-management-report-module.json",
     [string]$AccessToken = "",
     [string]$ExpectedModuleId = "msp-account-management-report",
-    [string]$ExpectedModuleVersion = "0.1.2"
+    [string]$ExpectedModuleVersion = "0.1.3"
 )
 
 $ErrorActionPreference = "Stop"
@@ -55,20 +55,27 @@ catch {
         $errorText = $_.Exception.Message
     }
 
-    if ($_.Exception.Response -and $_.Exception.Response.Content) {
-        $responseBody = $_.Exception.Response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
-        if (-not [string]::IsNullOrWhiteSpace($responseBody)) {
-            $errorText = $responseBody
-        }
-    }
-    elseif ($_.Exception.Response -and $_.Exception.Response.GetResponseStream) {
-        $stream = $_.Exception.Response.GetResponseStream()
-        if ($stream) {
-            $reader = [System.IO.StreamReader]::new($stream)
-            $responseBody = $reader.ReadToEnd()
-            if (-not [string]::IsNullOrWhiteSpace($responseBody)) {
-                $errorText = $responseBody
+    if ($errorText -notlike "*already registered*") {
+        try {
+            if ($_.Exception.Response -and $_.Exception.Response.Content) {
+                $responseBody = $_.Exception.Response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+                if (-not [string]::IsNullOrWhiteSpace($responseBody)) {
+                    $errorText = $responseBody
+                }
             }
+            elseif ($_.Exception.Response -and $_.Exception.Response.GetResponseStream) {
+                $stream = $_.Exception.Response.GetResponseStream()
+                if ($stream) {
+                    $reader = [System.IO.StreamReader]::new($stream)
+                    $responseBody = $reader.ReadToEnd()
+                    if (-not [string]::IsNullOrWhiteSpace($responseBody)) {
+                        $errorText = $responseBody
+                    }
+                }
+            }
+        }
+        catch {
+            # Keep the first captured error text when PowerShell has already disposed the response body.
         }
     }
 
