@@ -58,12 +58,16 @@ Recommended run:
 
 The Demo view uses public-safe placeholder tenant and app IDs. It validates the control-plane execution path and renders the module output, but it does not prove live Microsoft Graph collection until the client connection is backed by real target-tenant credentials.
 
+For a live demo, use an ignored `.work` client connection file created from the full execution smoke template. The real client connection should use a target-tenant app registration with admin-consented Microsoft Graph application permissions and a certificate private key stored in the MSP Key Vault. Avoid showing tenant IDs, object IDs, certificate names, or user principal names on screen.
+
 Expected result:
 
 - Job moves from `Queued` to `Running`.
 - Container Apps execution reaches `Succeeded`.
 - Result collection moves the control-plane job to `Succeeded`.
 - Rendered Markdown report appears in the Demo view.
+
+If the module image is hosted in GHCR for a public portfolio demo, the repository and the GHCR package visibility are separate settings. A public repository can still have a private container package. The package must be public for anonymous Azure Container Apps pulls, or the deployment must be configured with private registry credentials.
 
 ## Demo Script
 

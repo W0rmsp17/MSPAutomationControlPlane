@@ -79,8 +79,30 @@ When testing a private GHCR package, the Container Apps Job needs registry crede
 
 For production, configure private registry credentials through Terraform and Key Vault-backed deployment inputs. For public portfolio modules, make the package public in GitHub package settings so the module image is anonymously pullable.
 
+The public package check is separate from the repository check. Anonymous pull should be able to acquire a GHCR token for the module image:
+
+```powershell
+Invoke-RestMethod `
+  -Uri "https://ghcr.io/token?scope=repository%3A<owner>%2F<repo>%2F<package>%3Apull&service=ghcr.io" `
+  -Method Get
+```
+
+If that request returns `UNAUTHORIZED`, the Container Apps Job will fail with `ErrImagePull` or `ImagePullBackOff` before the module code starts.
+
 Validated result shape:
 
 - Container Apps Job execution reached `Succeeded`.
 - Control-plane job reached `Succeeded` after result collection.
 - Output contained summary, findings, metrics, recommendations, license summary, user license signals, and rendered Markdown.
+
+The first full live account-management report smoke proved:
+
+```text
+Queued -> Running -> Succeeded
+```
+
+and returned a control-plane summary similar to:
+
+```text
+Account management report scaffold generated for <client-connection-id>.
+```

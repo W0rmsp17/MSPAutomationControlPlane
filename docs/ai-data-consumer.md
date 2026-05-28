@@ -181,6 +181,18 @@ MVP implementation status:
 - `TemplateSummary` produces deterministic derived JSON from the raw module result.
 - `AI` is modelled in the connector contract but should only be wired after provider credentials, prompt templates, and data policy controls are explicit.
 
+The first live account-management report smoke validated this flow with the template summary connector:
+
+```text
+Succeeded module job
+  -> raw result artifact collected
+  -> TemplateSummary connector registered
+  -> result artifact processed
+  -> derived artifact stored as DerivedCustomerConfidential
+```
+
+Malformed processing requests should return `400` from the API. A `500` here usually indicates a validation gap in the API layer rather than a connector failure.
+
 ## Security Controls
 
 Required controls:

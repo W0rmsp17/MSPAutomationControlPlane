@@ -17,10 +17,17 @@ public static class HttpRequestDataExtensions
         this HttpRequestData request,
         CancellationToken cancellationToken)
     {
-        return await JsonSerializer.DeserializeAsync<T>(
-            request.Body,
-            JsonOptions,
-            cancellationToken);
+        try
+        {
+            return await JsonSerializer.DeserializeAsync<T>(
+                request.Body,
+                JsonOptions,
+                cancellationToken);
+        }
+        catch (JsonException)
+        {
+            return default;
+        }
     }
 
     public static async Task<HttpResponseData> WriteJsonAsync(

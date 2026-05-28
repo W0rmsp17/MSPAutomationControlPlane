@@ -60,10 +60,20 @@ The validated job lifecycle is:
 Queued -> Running -> Succeeded
 ```
 
-Run it with:
+For a deployment-safe API and registration check, run:
 
 ```powershell
-.\scripts\test-cloud-smoke.ps1
+.\scripts\test-cloud-smoke.ps1 -RegistrationOnly
+```
+
+For a real Container Apps execution, create ignored local smoke files under `.work`, replace the target tenant placeholders, then run the smoke test with explicit paths:
+
+```powershell
+.\scripts\new-full-execution-smoke-files.ps1
+
+.\scripts\test-cloud-smoke.ps1 `
+  -ClientConnectionPath ".work\smoke\client-connection-real.json" `
+  -JobRequestPath ".work\smoke\submit-job-real.json"
 ```
 
 ## Problem Statement
@@ -147,7 +157,7 @@ The first Terraform deployment target is the central MSP environment. Client ten
 Create an environment-specific `terraform.tfvars` file from the relevant example under `infra/environments/<environment>`, then run:
 
 ```powershell
-.\scripts\deploy.ps1 -Environment dev -Apply -AutoApprove
+.\scripts\deploy.ps1 -Environment "<environment>" -Apply -AutoApprove
 .\scripts\ensure-swa-auth-app.ps1
 .\scripts\deploy-function.ps1
 .\scripts\deploy-frontend.ps1
@@ -157,13 +167,13 @@ Create an environment-specific `terraform.tfvars` file from the relevant example
 For lab cleanup, preview teardown first:
 
 ```powershell
-.\scripts\teardown.ps1 -Environment dev
+.\scripts\teardown.ps1 -Environment "<environment>"
 ```
 
 Then destroy the Terraform-managed resources and the script-managed Static Web App/API auth app registration:
 
 ```powershell
-.\scripts\teardown.ps1 -Environment dev -Destroy -AutoApprove
+.\scripts\teardown.ps1 -Environment "<environment>" -Destroy -AutoApprove
 ```
 
 Use `-KeepAuthApp` if the Entra app registration is shared or manually managed outside this lab deployment.
@@ -284,6 +294,7 @@ This repository now has a deployable MVP foundation:
 - Recent job catalog and job event history in the management UI.
 - Data consumer connector registration and derived artifact inspection in the management UI.
 - Service Bus-triggered simulated dispatch flow.
+- Container Apps Job execution provider for isolated module workers.
 - Table Storage persistence provider.
 - Terraform deployment for the central MSP control plane.
 - Static management UI hosted on Azure Static Web Apps.
@@ -292,9 +303,9 @@ This repository now has a deployable MVP foundation:
 - Client connection bootstrap helper for target tenant app registration metadata.
 - Dual module intake model: manual manifest registration and CI/CD-produced module artifacts.
 
-The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, and Service Bus.
+The first live deployment has validated health checks and an end-to-end job flow through Azure Functions, Table Storage, Service Bus, Container Apps Jobs, Blob artifact handoff, and result collection.
 
-The current cloud smoke test validates the protected API, Service Bus dispatch, Container Apps Job execution, blob result handoff, and result collection path. See [Cloud smoke test](docs/cloud-smoke-test.md).
+The current cloud smoke test validates the protected API, module import, client connection registration, Service Bus dispatch, Container Apps Job execution, blob result handoff, and result collection path. See [Cloud smoke test](docs/cloud-smoke-test.md).
 
 ## Further Reading
 
