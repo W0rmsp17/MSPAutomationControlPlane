@@ -56,6 +56,19 @@ function Get-TerraformOutput {
     }
 }
 
+function Set-Utf8NoBomContent {
+    param(
+        [Parameter(Mandatory)]
+        [string]$Path,
+
+        [Parameter(Mandatory)]
+        [string]$Value
+    )
+
+    $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+    [System.IO.File]::WriteAllText($Path, $Value, $utf8NoBom)
+}
+
 $resourceGroupName = Get-TerraformOutput -Name "resource_group_name"
 $mspTenantId = Get-TerraformOutput -Name "msp_tenant_id"
 $functionHostName = Get-TerraformOutput -Name "function_app_default_hostname"
@@ -93,7 +106,7 @@ window.MSP_CONTROL_PLANE_CONFIG = {
     apiScope: "$apiScope"
   }
 };
-"@ | Set-Content -Path $configPath -Encoding utf8
+"@ | ForEach-Object { Set-Utf8NoBomContent -Path $configPath -Value $_ }
 
 $versionedAppPath = Join-Path $publishPath "app.$assetVersion.js"
 $versionedConfigPath = Join-Path $publishPath "app-config.$assetVersion.js"
@@ -106,13 +119,13 @@ $indexContent = $indexContent.
     Replace("./styles.css", "./styles.css?v=$assetVersion").
     Replace("./app-config.js", "./app-config.$assetVersion.js").
     Replace("./app.js", "./app.$assetVersion.js")
-Set-Content -Path $indexPath -Value $indexContent -Encoding utf8
+Set-Utf8NoBomContent -Path $indexPath -Value $indexContent
 
 $authTemplatePath = Join-Path $publishPath "staticwebapp.config.template.json"
 $authConfigPath = Join-Path $publishPath "staticwebapp.config.json"
 if (Test-Path $authTemplatePath) {
-    (Get-Content $authTemplatePath -Raw).Replace("__MSP_TENANT_ID__", $mspTenantId) |
-        Set-Content -Path $authConfigPath -Encoding utf8
+    $authConfigContent = (Get-Content $authTemplatePath -Raw).Replace("__MSP_TENANT_ID__", $mspTenantId)
+    Set-Utf8NoBomContent -Path $authConfigPath -Value $authConfigContent
     Remove-Item -LiteralPath $authTemplatePath -Force
 }
 
